@@ -1,5 +1,6 @@
-/* global BOX_CAMPUS_SAMPLE */
-var BOX_CAMPUS_SAMPLE = {
+import type { CampusInput } from "./types";
+
+export const BOX_CAMPUS_SAMPLE = {
   id: "sample-photo-exposure",
   title: "사진의 노출",
   origin: "authored-sample",
@@ -146,4 +147,4 @@ var BOX_CAMPUS_SAMPLE = {
       provenance: "authored",
     },
   ],
-};
+} satisfies CampusInput;
