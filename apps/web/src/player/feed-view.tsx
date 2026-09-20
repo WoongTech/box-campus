@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "@tanstack/react-form";
-import { BookmarkIcon } from "lucide-react";
+import { BookmarkIcon, XIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -51,9 +51,41 @@ export function FeedView({
       ) : null}
 
       <div
+        className="absolute inset-x-3 top-[max(1.35rem,env(safe-area-inset-top)+0.7rem)] z-20 flex items-center justify-between gap-3"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="flex min-w-0 items-center gap-2"
+          onClick={onOpenAccounts}
+        >
+          <Avatar>
+            <AvatarFallback className="text-xs">{initial || "주"}</AvatarFallback>
+          </Avatar>
+          <span className="truncate text-sm font-semibold">{state.campus.title}</span>
+        </button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-11 shrink-0 rounded-full"
+          aria-label={view.role === "advisor" ? "돌아가기" : "나가기"}
+          onClick={() => {
+            if (view.role === "advisor") {
+              actions.dispatch({ kind: "cancel-advisor" });
+              return;
+            }
+            onOpenAccounts();
+          }}
+        >
+          <XIcon className="size-5" />
+        </Button>
+      </div>
+
+      <div
         key={frame.transitionId}
         className={[
-          "flex min-h-0 flex-1 flex-col px-5 pt-[max(3.25rem,env(safe-area-inset-top)+2.5rem)]",
+          "flex min-h-0 flex-1 flex-col px-5 pt-[max(5.5rem,env(safe-area-inset-top)+4.25rem)]",
           hasChoices || hasText ? "pb-3" : "pb-2",
           "animate-in fade-in duration-300",
           nav === "back" ? "slide-in-from-left-8" : "slide-in-from-right-8",

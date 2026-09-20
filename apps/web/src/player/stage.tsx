@@ -19,9 +19,11 @@ function isTextFieldFocused() {
 }
 
 export function Stage() {
-  const { frame, actions } = useCampus();
+  const { frame, actions, state } = useCampus();
   const { locked: fieldLocked } = useInteractionLock();
-  const [accountsOpen, setAccountsOpen] = useState(false);
+  const [accountsOpen, setAccountsOpen] = useState(
+    () => typeof window !== "undefined" && !window.localStorage.getItem("box-campus-v1"),
+  );
   const [importOpen, setImportOpen] = useState(false);
   const startY = useRef(0);
   const startX = useRef(0);
@@ -30,6 +32,26 @@ export function Stage() {
 
   const cardRole = frame.kind === "card" ? frame.view.role : "";
   const interactionBlocked = accountsOpen || importOpen || fieldLocked;
+
+  function exitStory() {
+    if (accountsOpen) {
+      setAccountsOpen(false);
+      return;
+    }
+    if (importOpen) {
+      setImportOpen(false);
+      return;
+    }
+    if (cardRole === "advisor") {
+      actions.dispatch({ kind: "cancel-advisor" });
+      return;
+    }
+    if (frame.kind === "strip") {
+      actions.dispatch({ kind: "close-strip", transitionId: frame.transitionId });
+      return;
+    }
+    setAccountsOpen(true);
+  }
 
   function goNext() {
     if (frame.kind !== "card") return;
@@ -43,18 +65,30 @@ export function Stage() {
 
   function goBack() {
     if (frame.kind !== "card") return;
+    if (cardRole === "advisor") {
+      actions.dispatch({ kind: "cancel-advisor" });
+      return;
+    }
+    const trail =
+      state.session.kind === "feed" ? (state.session.feed.trail?.length ?? 0) : 0;
+    if (trail === 0) return;
     actions.back();
   }
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
-      if (interactionBlocked || isTextFieldFocused()) return;
+      if (fieldLocked || isTextFieldFocused()) return;
+      if (event.key === "Escape") {
+        exitStory();
+        return;
+      }
+      if (interactionBlocked) return;
       if (event.key === "ArrowLeft" || event.key === "ArrowUp") goBack();
       if (event.key === "ArrowRight" || event.key === "ArrowDown") goNext();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [interactionBlocked, cardRole, actions]);
+  }, [interactionBlocked, fieldLocked, cardRole, actions, accountsOpen, importOpen, frame, state]);
 
   return (
     <main
@@ -83,6 +117,10 @@ export function Stage() {
         const deltaX = endX - startX.current;
         if (Math.abs(deltaX) < 48 && Math.abs(deltaY) < 48) return;
         skipClick.current = true;
+        if (deltaY < -48 && Math.abs(deltaY) > Math.abs(deltaX)) {
+          exitStory();
+          return;
+        }
         if (deltaX > 48 && Math.abs(deltaX) > Math.abs(deltaY)) goBack();
         else if (deltaY > 48) goNext();
       }}

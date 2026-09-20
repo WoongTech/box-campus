@@ -39,10 +39,10 @@ export function AccountSheet({
       <div className="flex items-center justify-between px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2">
         <div>
           <h1 className="text-lg font-semibold tracking-tight">주제</h1>
-          <p className="text-xs text-muted-foreground">주제마다 장이 이어집니다.</p>
+          <p className="text-xs text-muted-foreground">표를 누르면 스토리로 들어갑니다.</p>
         </div>
         <Button type="button" variant="ghost" className="min-h-11" onClick={() => onOpenChange(false)}>
-          닫기
+          이어서 보기
         </Button>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
@@ -73,7 +73,7 @@ export function AccountSheet({
                   <span>
                     <span className="line-clamp-2 text-sm font-semibold">{name}</span>
                     <span className={`mt-1 block text-xs ${current ? "text-background/70" : "text-muted-foreground"}`}>
-                      {count > 0 ? `${count}가지` : "초안"}
+                      {current ? "이어서 보기" : count > 0 ? `${count}가지` : "초안"}
                     </span>
                   </span>
                 </button>
