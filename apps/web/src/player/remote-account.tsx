@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { currentEmail, remoteConfigured, sendSignInLink, signOutRemote, subscribeAuth } from "./remote-sync";
+import { remoteConfigured, sendSignInLink, signOutRemote, subscribeAuth } from "./remote-sync";
 
 export function RemoteAccount() {
   const [email, setEmail] = useState("");
@@ -14,12 +14,8 @@ export function RemoteAccount() {
 
   useEffect(() => {
     if (!configured) return;
-    return subscribeAuth((userId) => {
-      if (!userId) {
-        setSignedIn(null);
-        return;
-      }
-      void currentEmail().then((value) => setSignedIn(value ?? "로그인됨"));
+    return subscribeAuth((user) => {
+      setSignedIn(user ? user.email ?? "로그인됨" : null);
     });
   }, [configured]);
 

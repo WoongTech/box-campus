@@ -33,21 +33,24 @@ function getClient() {
   client = createClient(url, key, {
     auth: {
       detectSessionInUrl: true,
-      flowType: "pkce",
+      flowType: "implicit",
       persistSession: true,
     },
   });
   return client;
 }
 
-export function subscribeAuth(onUser: (userId: string | null) => void) {
+export type RemoteUser = { id: string; email: string | null };
+
+export function subscribeAuth(onUser: (user: RemoteUser | null) => void) {
   const supabase = getClient();
   if (!supabase) {
     onUser(null);
     return () => {};
   }
   const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-    onUser(session?.user.id ?? null);
+    const user = session?.user;
+    onUser(user ? { id: user.id, email: user.email ?? null } : null);
   });
   return () => data.subscription.unsubscribe();
 }

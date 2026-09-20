@@ -267,14 +267,21 @@ export function CampusProvider({ children }: { children: ReactNode }) {
     bindRemoteStale(() => {
       void pullIfNewer("다른 기기의 기록을 가져왔습니다");
     });
-    const stopAuth = subscribeAuth((userId) => {
-      if (!userId) {
+    const callbackUrl = new URL(window.location.href);
+    if (callbackUrl.searchParams.has("code")) {
+      toast("이 로그인 링크는 이 브라우저에 붙지 않습니다. 링크를 다시 보내 주세요.");
+      callbackUrl.searchParams.delete("code");
+      const next = `${callbackUrl.pathname}${callbackUrl.search}${callbackUrl.hash}`;
+      window.history.replaceState(window.history.state, "", next);
+    }
+    const stopAuth = subscribeAuth((user) => {
+      if (!user) {
         reconciledUser.current = null;
         return;
       }
-      if (reconciledUser.current === userId) return;
-      reconciledUser.current = userId;
-      void reconcile(userId);
+      if (reconciledUser.current === user.id) return;
+      reconciledUser.current = user.id;
+      void reconcile(user.id);
     });
     const poll = window.setInterval(() => {
       void pullIfNewer("스토리가 갱신되었습니다");
