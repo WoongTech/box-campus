@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "@tanstack/react-form";
-import { BookmarkIcon, XIcon } from "lucide-react";
+import { AppIcon, phoneIconSize } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -72,7 +72,11 @@ export function FeedView({ onClose }: { onClose: () => void }) {
             aria-pressed={meta.saved}
             onClick={actions.toggleSave}
           >
-            <BookmarkIcon className={meta.saved ? "size-5 fill-current" : "size-5"} />
+            <AppIcon
+              name="bookmark"
+              size={phoneIconSize.feed}
+              className={meta.saved ? "text-foreground" : "text-muted-foreground"}
+            />
           </Button>
         ) : null}
         <Button
@@ -89,7 +93,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
             onClose();
           }}
         >
-          <XIcon className="size-5" />
+          <AppIcon name="close" size={phoneIconSize.feed} />
         </Button>
       </div>
 

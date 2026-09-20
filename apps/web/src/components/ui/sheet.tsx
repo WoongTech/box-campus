@@ -5,7 +5,7 @@ import { cn } from "cn"
 import { Dialog as SheetPrimitive } from "radix-ui"
 
 import { Button } from "@/components/ui/button"
-import { XIcon } from "lucide-react"
+import { AppIcon, phoneIconSize } from "@/lib/icons"
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
@@ -75,8 +75,7 @@ function SheetContent({
               className="absolute top-3 right-3"
               size="icon-sm"
             >
-              <XIcon
-              />
+              <AppIcon name="close" size={phoneIconSize.sheetClose} />
               <span className="sr-only">닫기</span>
             </Button>
           </SheetPrimitive.Close>

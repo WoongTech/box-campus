@@ -1,6 +1,6 @@
 "use client";
 
-import { PlusIcon } from "lucide-react";
+import { AppIcon, phoneIconSize } from "@/lib/icons";
 import { useCampus } from "./campus-provider";
 
 export function StoryRail({
@@ -52,8 +52,8 @@ export function StoryRail({
       })}
       {onCompose ? (
         <button type="button" className="flex w-[4.25rem] shrink-0 flex-col items-center gap-1.5" aria-label="추가" onClick={onCompose}>
-          <span className="flex size-[3.75rem] items-center justify-center rounded-full border border-white/45">
-            <PlusIcon className="size-6" strokeWidth={2} />
+          <span className="flex size-[3.75rem] items-center justify-center text-foreground">
+            <AppIcon name="plus" size={phoneIconSize.rail} />
           </span>
           <span className="text-[11px] text-muted-foreground">추가</span>
         </button>

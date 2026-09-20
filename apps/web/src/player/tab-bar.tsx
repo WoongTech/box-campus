@@ -1,6 +1,6 @@
 "use client";
 
-import { BookmarkIcon, HomeIcon, PlusIcon } from "lucide-react";
+import { AppIcon, phoneIconSize } from "@/lib/icons";
 
 export function TabBar({
   tab,
@@ -20,27 +20,27 @@ export function TabBar({
           type="button"
           aria-label="홈"
           aria-current={tab === "home" ? "page" : undefined}
-          className="flex size-12 items-center justify-center"
+          className={`flex size-12 items-center justify-center ${tab === "home" ? "text-foreground" : "text-muted-foreground"}`}
           onClick={onHome}
         >
-          <HomeIcon className={tab === "home" ? "size-6 fill-current" : "size-6"} />
+          <AppIcon name="home" size={phoneIconSize.tab} />
         </button>
         <button
           type="button"
           aria-label="추가"
-          className="flex size-12 items-center justify-center"
+          className="flex size-12 items-center justify-center text-foreground"
           onClick={onCompose}
         >
-          <PlusIcon className="size-6" strokeWidth={2} />
+          <AppIcon name="plus" size={phoneIconSize.tab} />
         </button>
         <button
           type="button"
           aria-label="저장"
           aria-current={tab === "saved" ? "page" : undefined}
-          className="flex size-12 items-center justify-center"
+          className={`flex size-12 items-center justify-center ${tab === "saved" ? "text-foreground" : "text-muted-foreground"}`}
           onClick={onSaved}
         >
-          <BookmarkIcon className={tab === "saved" ? "size-6 fill-current" : "size-6"} />
+          <AppIcon name="bookmark" size={phoneIconSize.tab} />
         </button>
       </div>
     </nav>

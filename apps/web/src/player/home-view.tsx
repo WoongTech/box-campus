@@ -1,6 +1,6 @@
 "use client";
 
-import { BookmarkIcon } from "lucide-react";
+import { AppIcon, phoneIconSize } from "@/lib/icons";
 import { splitBlocks } from "./split-blocks";
 import { StoryRail } from "./story-rail";
 import { Wordmark } from "./brand";
@@ -150,7 +150,7 @@ export function SavedView({ onOpenCard }: { onOpenCard: (cardId: string) => void
       <div className="min-h-0 flex-1 overflow-y-auto pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
         {items.length === 0 ? (
           <div className="flex flex-col items-center px-8 py-20 text-center">
-            <BookmarkIcon className="size-8 text-muted-foreground" />
+            <AppIcon name="bookmark" size={phoneIconSize.empty} className="text-muted-foreground" />
             <p className="mt-3 text-sm font-medium">저장한 카드가 없습니다</p>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">스토리에서 표시해 두면 여기에 모입니다.</p>
           </div>

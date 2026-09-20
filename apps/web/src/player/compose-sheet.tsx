@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardPasteIcon, PenLineIcon } from "lucide-react";
+import { AppIcon, phoneIconSize } from "@/lib/icons";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,7 +48,7 @@ export function ComposeSheet({
               onStartTopic();
             }}
           >
-            <PenLineIcon className="size-5" />
+            <AppIcon name="pen" size={phoneIconSize.sheet} />
             새 스토리
           </Button>
           <Button
@@ -60,7 +60,7 @@ export function ComposeSheet({
               onPaste();
             }}
           >
-            <ClipboardPasteIcon className="size-5" />
+            <AppIcon name="paste" size={phoneIconSize.sheet} />
             묶음 붙이기
           </Button>
           <section className="mt-2 rounded-2xl border border-border/70 px-3 py-3">
