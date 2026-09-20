@@ -1,9 +1,3 @@
-import { AlterMarkSvg } from "@/lib/alter-mark";
-
 export function Wordmark() {
-  return (
-    <span className="inline-flex text-foreground" role="img" aria-label="alter">
-      <AlterMarkSvg word={["a", "l", "t", "e", "r"]} height={28} className="block w-auto" />
-    </span>
-  );
+  return <img src="/alter-wordmark.png" alt="alter" className="block h-5 w-auto" />;
 }

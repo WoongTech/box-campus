@@ -37,7 +37,7 @@ export function HomeView({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="border-b border-white/10 px-4 pt-[max(0.85rem,env(safe-area-inset-top))] pb-2.5">
+      <header className="flex justify-center border-b border-white/10 px-4 pt-[max(0.85rem,env(safe-area-inset-top))] pb-2.5">
         <h1 className="m-0 font-normal">
           <Wordmark />
         </h1>
