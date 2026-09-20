@@ -588,33 +588,6 @@ function canAdvance(encounter) {
   return false;
 }
 
-function projectDayCloseView(state) {
-  var goal = state.progress.dailyGoal || DEFAULT_DAILY_GOAL;
-  var done = state.progress.dayPulse.completed;
-  return {
-    role: "day-close",
-    letter: "",
-    roleLabel: ROLE_LABELS.hub,
-    weekLabel: null,
-    pentadIndex: null,
-    blocks: [
-      { kind: "title", text: "오늘은 여기까지" },
-      {
-        kind: "body",
-        text:
-          "하루 " +
-          goal +
-          "장 중 " +
-          done +
-          "장을 봤습니다. 내일 같은 주제로 이어집니다.",
-      },
-    ],
-    control: { kind: "advance", label: "확인" },
-    dayCount: done,
-    authorBrief: state.authorBrief,
-  };
-}
-
 function actionId(prefix, idx) {
   return prefix + "-" + idx;
 }
@@ -1028,7 +1001,7 @@ function templateCampusFromAnswers(answers) {
       id: "c-rm2",
       ideaId: "ci2",
       foreignField: lens,
-      analogy: "하루 " + answers.rhythm + "장은 " + lens + " 연습 분량과 비슷하다.",
+      analogy: lens + "에서도 짧게 여러 번이 한 번에 길게보다 낫다.",
       analogyLimit: "분량만 맞고 내용은 직접 채워야 한다.",
       provenance: "generated-draft",
     },

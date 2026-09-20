@@ -94,27 +94,6 @@ test("tutor reveal is idempotent and blocks advance before reveal", () => {
   }
 });
 
-test("fifth advisor answer installs a draft and an author brief", () => {
-  let state = createInitialState(BOX_CAMPUS_SAMPLE, FIXED_NOW);
-  state = record(state, { kind: "start-advisor" }, FIXED_NOW);
-  state = record(
-    state,
-    { kind: "submit-text", transitionId: state.transitionId, actionId: "adv-0", value: "테스트 주제" },
-    FIXED_NOW,
-  );
-  for (const actionId of ["adv-fl-0", "adv-bl-0", "adv-rh-0", "adv-ln-0"]) {
-    const frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
-    state = record(
-      state,
-      { kind: "activate", transitionId: frame.transitionId, actionId },
-      FIXED_NOW,
-    );
-  }
-  assert.ok(state.authorBrief?.includes("테스트 주제"));
-  const frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
-  assert.ok(frame.view.blocks.some((block) => block.kind === "badge" && block.text === "초안"));
-});
-
 test("import replaces a valid campus and keeps the old one on garbage", () => {
   const sampleCampus = parseCampus(BOX_CAMPUS_SAMPLE);
   let state = createInitialState(BOX_CAMPUS_SAMPLE, FIXED_NOW);
@@ -191,35 +170,52 @@ test("a wrong check keeps the explanation primary on reveal", () => {
   );
 });
 
-test("advisor rhythm installs a daily goal that pauses the feed", () => {
+test("the feed keeps going past a daily goal without pausing", () => {
   let state = createInitialState(BOX_CAMPUS_SAMPLE, FIXED_NOW);
-  state.progress.dailyGoal = 2;
-  state.progress.dayPulse.completed = 1;
+  state.progress.dailyGoal = 1;
+  state.progress.dayPulse.completed = 0;
   let frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
   state = record(state, { kind: "advance", transitionId: frame.transitionId }, FIXED_NOW);
   frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
-  assert.ok(frame.view.blocks.some((block) => block.kind === "title" && block.text === "오늘은 여기까지"));
+  assert.equal(
+    frame.view.blocks.some((block) => block.text === "오늘은 여기까지"),
+    false,
+  );
   assert.equal(state.session.kind, "feed");
   if (state.session.kind === "feed") {
-    assert.equal(state.session.feed.dayClose, true);
-    assert.ok(state.session.feed.resumeFeed);
+    assert.equal(state.session.feed.dayClose, undefined);
+    assert.equal(state.session.feed.current.role, "tutor");
   }
 });
 
-test("a new day resumes after the daily pause", () => {
+test("a leftover day-close bookmark resumes the story", () => {
   let state = createInitialState(BOX_CAMPUS_SAMPLE, FIXED_NOW);
-  state.progress.dailyGoal = 1;
-  let frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
-  state = record(state, { kind: "advance", transitionId: frame.transitionId }, FIXED_NOW);
-  frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
-  assert.ok(frame.view.blocks.some((block) => block.text === "오늘은 여기까지"));
-  const nextDay = FIXED_NOW + 48 * 60 * 60 * 1000;
-  frame = cardFrame(schedule(state, nextDay, { kind: "resume" }));
-  assert.equal(frame.view.blocks.some((block) => block.text === "오늘은 여기까지"), false);
-  assert.equal(frame.view.dayCount, 0);
+  if (state.session.kind !== "feed") throw new Error("expected feed");
+  state = {
+    ...state,
+    session: {
+      kind: "feed",
+      feed: {
+        ...state.session.feed,
+        dayClose: true,
+        dayCloseDate: state.progress.dayPulse.date,
+        resumeFeed: {
+          ...state.session.feed,
+          current: { role: "tutor", phase: "asking", cardId: "tutor-a" },
+          slotIndex: 1,
+        },
+      },
+    },
+  };
+  const frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  assert.equal(frame.view.role, "tutor");
+  assert.equal(
+    frame.view.blocks.some((block) => block.text === "오늘은 여기까지"),
+    false,
+  );
 });
 
-test("fifth advisor answer sets daily goal from rhythm choice", () => {
+test("the fourth advisor answer installs a draft without a daily stop", () => {
   let state = createInitialState(BOX_CAMPUS_SAMPLE, FIXED_NOW);
   state = record(state, { kind: "start-advisor" }, FIXED_NOW);
   state = record(
@@ -227,7 +223,7 @@ test("fifth advisor answer sets daily goal from rhythm choice", () => {
     { kind: "submit-text", transitionId: state.transitionId, actionId: "adv-0", value: "테스트 주제" },
     FIXED_NOW,
   );
-  for (const actionId of ["adv-fl-0", "adv-bl-0", "adv-rh-1", "adv-ln-0"]) {
+  for (const actionId of ["adv-fl-0", "adv-bl-0", "adv-ln-0"]) {
     const frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
     state = record(
       state,
@@ -235,7 +231,13 @@ test("fifth advisor answer sets daily goal from rhythm choice", () => {
       FIXED_NOW,
     );
   }
-  assert.equal(state.progress.dailyGoal, 12);
+  assert.equal(state.campus.title, "테스트 주제");
+  assert.ok(state.authorBrief?.includes("테스트 주제"));
+  assert.ok(state.authorBrief?.includes("비유 분야"));
+  assert.equal(state.authorBrief?.includes("하루 "), false);
+  const frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  assert.equal(frame.view.role, "librarian");
+  assert.ok(frame.view.blocks.some((block) => block.kind === "badge" && block.text === "초안"));
 });
 
 test("editor after a check carries the last explanation forward", () => {
