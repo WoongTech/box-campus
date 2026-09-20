@@ -43,6 +43,17 @@ function isObject(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
 }
 
+function optionalImage(card) {
+  if (card.image == null) return null;
+  if (!isObject(card.image)) throw "캠퍼스 묶음: 사진 형식이 잘못되었습니다.";
+  var src = nonEmptyString(card.image.src, "사진 주소");
+  if (src.indexOf("https://") !== 0) throw "캠퍼스 묶음: 사진은 https 주소여야 합니다.";
+  return {
+    src: src,
+    alt: nonEmptyString(card.image.alt, "사진 설명"),
+  };
+}
+
 function nonEmptyString(v, field) {
   if (typeof v !== "string" || v.trim() === "") {
     throw "캠퍼스 묶음: " + field + "이 비어 있습니다.";
@@ -56,21 +67,37 @@ function parseCampus(raw) {
   var id = nonEmptyString(raw.id, "id");
   var title = nonEmptyString(raw.title, "title");
   var origin = raw.origin === "advisor-template" ? "advisor-template" : "authored-sample";
-
-  if (!Array.isArray(raw.weeks) || raw.weeks.length !== 6) {
+  var format = raw.format == null ? "course" : raw.format;
+  if (format !== "course" && format !== "volume" && format !== "series") {
+    throw "캠퍼스 묶음: 형식은 course, volume, series 중 하나여야 합니다.";
+  }
+  if (!Array.isArray(raw.weeks) || raw.weeks.length === 0) {
+    throw "캠퍼스 묶음: 묶음 부분이 없습니다.";
+  }
+  if (format === "course" && raw.weeks.length !== 6) {
     throw "캠퍼스 묶음: 주차는 정확히 6개여야 합니다.";
+  }
+  if (format === "volume" && raw.weeks.length !== 1) {
+    throw "캠퍼스 묶음: 단행본은 부분이 하나여야 합니다.";
   }
 
   var weeks = [];
-  for (var wi = 0; wi < 6; wi++) {
+  var weekCount = raw.weeks.length;
+  for (var wi = 0; wi < weekCount; wi++) {
     var w = raw.weeks[wi];
-    if (!isObject(w)) throw "캠퍼스 묶음: 주차 " + (wi + 1) + " 형식이 잘못되었습니다.";
+    if (!isObject(w)) throw "캠퍼스 묶음: 부분 " + (wi + 1) + " 형식이 잘못되었습니다.";
     var num = w.number;
-    if (num !== wi + 1) throw "캠퍼스 묶음: 주차 번호가 1부터 6까지 순서여야 합니다.";
-    var weekId = nonEmptyString(w.id, "주차 id");
+    if (num !== wi + 1) {
+      throw format === "course"
+        ? "캠퍼스 묶음: 주차 번호가 1부터 6까지 순서여야 합니다."
+        : "캠퍼스 묶음: 부분 번호가 1부터 순서여야 합니다.";
+    }
+    var weekId = nonEmptyString(w.id, "부분 id");
     var ideaIds = Array.isArray(w.ideaIds) ? w.ideaIds.slice() : [];
     if (wi === 0 && ideaIds.length === 0) {
-      throw "캠퍼스 묶음: 1주차에는 최소 한 개의 아이디어가 필요합니다.";
+      throw format === "course"
+        ? "캠퍼스 묶음: 1주차에는 최소 한 개의 아이디어가 필요합니다."
+        : "캠퍼스 묶음: 첫 부분에는 최소 한 개의 아이디어가 필요합니다.";
     }
     weeks.push({
       id: weekId,
@@ -275,6 +302,8 @@ function parseCampus(raw) {
     } else {
       throw "캠퍼스 묶음: 알 수 없는 카드 역할입니다.";
     }
+    var image = optionalImage(c);
+    if (image) cards[cards.length - 1].image = image;
   }
 
   var listedWeekByIdea = {};
@@ -323,6 +352,7 @@ function parseCampus(raw) {
     id: id,
     title: title,
     origin: origin,
+    format: format,
     weeks: weeks,
     ideas: ideas,
     cards: cards,
@@ -638,6 +668,9 @@ function projectCardView(state, encounter) {
     blocks.push({ kind: "badge", text: "초안" });
   }
   blocks.push({ kind: "eyebrow", text: idea ? idea.title : "" });
+  if (card.image) {
+    blocks.push({ kind: "image", src: card.image.src, alt: card.image.alt });
+  }
 
   var control;
 

@@ -1,28 +1,33 @@
 import type { Block } from "@box-campus/engine";
 
+type ReadableBlock = Extract<Block, { text: string }>;
+
 export type SplitBlocks = {
-  hero: Block | null;
+  hero: ReadableBlock | null;
   verdict: Extract<Block, { kind: "verdict" }> | null;
+  images: Extract<Block, { kind: "image" }>[];
   /** Extra lines kept in the reading pane (e.g. reveal, thesis footnotes). */
-  reading: Block[];
+  reading: ReadableBlock[];
   /** Small metadata for the account strip (eyebrow, source, badge). */
-  meta: Block[];
+  meta: ReadableBlock[];
 };
 
 export function splitBlocks(blocks: Block[]): SplitBlocks {
-  const meta: Block[] = [];
-  const bodies: Block[] = [];
+  const meta: ReadableBlock[] = [];
+  const bodies: ReadableBlock[] = [];
+  const images: Extract<Block, { kind: "image" }>[] = [];
   let verdict: Extract<Block, { kind: "verdict" }> | null = null;
 
   for (const block of blocks) {
     if (block.kind === "verdict") verdict = block;
+    else if (block.kind === "image") images.push(block);
     else if (block.kind === "body" || block.kind === "title") bodies.push(block);
     else meta.push(block);
   }
 
   const title = bodies.find((block) => block.kind === "title") ?? null;
-  let hero: Block | null = null;
-  const reading: Block[] = [];
+  let hero: ReadableBlock | null = null;
+  const reading: ReadableBlock[] = [];
 
   if (title) {
     hero = title;
@@ -38,5 +43,5 @@ export function splitBlocks(blocks: Block[]): SplitBlocks {
     for (const body of bodies.slice(1)) reading.push(body);
   }
 
-  return { hero, verdict, reading, meta };
+  return { hero, verdict, images, reading, meta };
 }

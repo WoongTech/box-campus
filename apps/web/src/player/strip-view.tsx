@@ -27,7 +27,9 @@ export function StripView() {
                 }
               >
                 <h2 className="text-base font-semibold tracking-tight">
-                  {week.number}주 · {week.title}
+                  {frame.campus.format === "course"
+                    ? `${week.number}주 · ${week.title}`
+                    : week.title}
                 </h2>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{week.promise}</p>
                 {empty ? (

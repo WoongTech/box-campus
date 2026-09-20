@@ -12,10 +12,13 @@ export type Idea = {
   weekId: string;
 };
 
+export type CampusFormat = "course" | "volume" | "series";
+
 export type Campus = {
   id: string;
   title: string;
   origin: "authored-sample" | "advisor-template";
+  format: CampusFormat;
   weeks: Week[];
   ideas: Idea[];
   cards: Array<{ id: string; role: string; ideaId: string }>;
@@ -53,12 +56,14 @@ export type CardInput = {
   field?: string;
   analogy?: string;
   analogyLimit?: string;
+  image?: { src: string; alt: string };
 };
 
 export type CampusInput = {
   id: string;
   title: string;
   origin?: "authored-sample" | "advisor-template";
+  format?: CampusFormat;
   weeks: WeekInput[];
   ideas: IdeaInput[];
   cards: CardInput[];
@@ -103,6 +108,7 @@ export type PlayerState = {
 export type Block =
   | { kind: "eyebrow" | "title" | "body" | "badge"; text: string }
   | { kind: "source"; text: string; href?: string | null }
+  | { kind: "image"; src: string; alt: string }
   | { kind: "verdict"; tone: "good" | "retry"; text: string };
 
 export type Control =

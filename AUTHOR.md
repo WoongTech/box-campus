@@ -21,7 +21,7 @@ var BOX_CAMPUS_PACK = {
   title: "주제 제목",
   origin: "authored-sample", // 또는 advisor-template
   weeks: [
-    // 정확히 6개, number 1..6
+    // course는 정확히 6개. volume은 1개. series는 1개 이상.
     { id: "w1", number: 1, title: "…", promise: "…", ideaIds: ["i1"] },
     // 2–6주는 ideaIds: [] 가능
   ],
@@ -81,8 +81,10 @@ var BOX_CAMPUS_PACK = {
 다음 규칙으로 campuses/<slug>.js 파일 내용만 출력하세요.
 - var BOX_CAMPUS_PACK = { ... }; 형태
 - 한국어 UI 문장
-- 주차 6개 (1주차에만 아이디어·카드, 2–6주는 제목·약속만 ideaIds: [])
+- format은 course, volume, series. 팟캐스트 정리처럼 6주가 아니면 volume(단행본) 또는 series(시리즈)
+- course만 주차 6개. volume은 weeks 1개. series는 편 수만큼, 제목은 주차 이름이 아님
 - 각 아이디어에 librarian → tutor → editor → roommate 네 역할 카드
+- 확인한 사진만 image: { src: "https://...", alt: "설명" }. 주소를 만들지 말 것
 - 사실을 지어내지 말고, 출처 label은 실제로 확인 가능한 범위에서만
 - 튜터 선택지 2개 이상, 정답 하나
 - 에디터 패치 2개 이상, 구멍을 닫는 패치 하나

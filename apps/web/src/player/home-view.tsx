@@ -66,13 +66,18 @@ export function HomeView({
         ) : null}
 
         {shelved ? (
-          state.campus.weeks.map((week) => (
+          state.campus.weeks.map((week) => {
+            const format = state.campus.format ?? "course";
+            const heading =
+              format === "volume" ? null : format === "series" ? week.title : `${week.number}주 · ${week.title}`;
+            const emptyHint = format === "series" ? "추가로 이 편을 채웁니다." : "추가로 이 주를 채웁니다.";
+            return (
           <section key={week.id}>
-            <h2 className="px-4 pt-5 pb-1 text-xs font-medium text-muted-foreground">
-              {week.number}주 · {week.title}
-            </h2>
+            {heading ? (
+              <h2 className="px-4 pt-5 pb-1 text-xs font-medium text-muted-foreground">{heading}</h2>
+            ) : null}
             {week.promise.trim() ? (
-              <p className="px-4 pb-1 text-sm text-muted-foreground">{week.promise}</p>
+              <p className={`px-4 pb-1 text-sm text-muted-foreground ${heading ? "" : "pt-5"}`}>{week.promise}</p>
             ) : null}
             {week.ideaIds.length === 0 ? (
               <button
@@ -81,7 +86,7 @@ export function HomeView({
                 onClick={onCompose}
               >
                 <span className="text-sm font-medium">아직 카드가 없습니다</span>
-                <span className="mt-1 block text-xs text-muted-foreground">추가로 이 주를 채웁니다.</span>
+                <span className="mt-1 block text-xs text-muted-foreground">{emptyHint}</span>
               </button>
             ) : (
               week.ideaIds.map((ideaId, index) => {
@@ -115,7 +120,8 @@ export function HomeView({
               })
             )}
           </section>
-        ))
+            );
+          })
         ) : (
           <button type="button" className="w-full px-6 py-16 text-center" onClick={onCompose}>
             <span className="block text-sm font-medium">아직 스토리가 없습니다</span>

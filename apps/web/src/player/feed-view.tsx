@@ -127,6 +127,14 @@ export function FeedView({ onClose }: { onClose: () => void }) {
                   {block.text}
                 </p>
               ))}
+          {split.images.map((block) => (
+            <img
+              key={block.src}
+              src={block.src}
+              alt={block.alt}
+              className="mx-auto max-h-64 w-full max-w-[22rem] rounded-2xl object-contain"
+            />
+          ))}
           {split.hero ? (
             <Hero block={split.hero} centered={centered} />
           ) : (
@@ -222,7 +230,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
   );
 }
 
-function Hero({ block, centered }: { block: Block; centered: boolean }) {
+function Hero({ block, centered }: { block: Extract<Block, { text: string }>; centered: boolean }) {
   const reading =
     block.text.length > 120
       ? "text-lg leading-relaxed"
@@ -240,7 +248,7 @@ function Hero({ block, centered }: { block: Block; centered: boolean }) {
   );
 }
 
-function ReadingLine({ block, centered }: { block: Block; centered: boolean }) {
+function ReadingLine({ block, centered }: { block: Extract<Block, { text: string }>; centered: boolean }) {
   return (
     <p
       className={`text-base leading-relaxed text-foreground/90 ${centered ? "mx-auto max-w-[22rem]" : ""}`}
@@ -250,7 +258,7 @@ function ReadingLine({ block, centered }: { block: Block; centered: boolean }) {
   );
 }
 
-function MetaLine({ block, centered }: { block: Block; centered: boolean }) {
+function MetaLine({ block, centered }: { block: Extract<Block, { text: string }>; centered: boolean }) {
   const className = `text-sm text-muted-foreground ${centered ? "mx-auto max-w-[22rem]" : ""}`;
   if (block.kind === "source" && block.href) {
     return (

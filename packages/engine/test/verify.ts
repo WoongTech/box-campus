@@ -423,3 +423,72 @@ test("the analogy is the roommate card, and the limit follows it", () => {
     true,
   );
 });
+
+test("a course stays six weeks and a digest can be one volume", () => {
+  assert.equal(parseCampus(BOX_CAMPUS_SAMPLE).format, "course");
+  const sample = structuredClone(BOX_CAMPUS_SAMPLE);
+  const volume = parseCampus({
+    ...sample,
+    id: "volume-digest",
+    format: "volume",
+    weeks: [{ ...sample.weeks[0], ideaIds: ["idea-a"] }],
+    ideas: sample.ideas.filter((idea) => idea.id === "idea-a"),
+    cards: sample.cards.filter((card) => card.ideaId === "idea-a"),
+  });
+  assert.equal(volume.format, "volume");
+  assert.equal(volume.weeks.length, 1);
+  assert.throws(
+    () => parseCampus({ ...BOX_CAMPUS_SAMPLE, format: "volume" }),
+    (error: unknown) => error === "캠퍼스 묶음: 단행본은 부분이 하나여야 합니다.",
+  );
+});
+
+test("a series is ordered parts, not six weeks", () => {
+  const sample = structuredClone(BOX_CAMPUS_SAMPLE);
+  const ideaB = sample.ideas.find((idea) => idea.id === "idea-b");
+  assert.ok(ideaB);
+  const series = parseCampus({
+    ...sample,
+    id: "series-digest",
+    format: "series",
+    weeks: [
+      { ...sample.weeks[0], ideaIds: ["idea-a"] },
+      { ...sample.weeks[1], number: 2, ideaIds: ["idea-b"] },
+    ],
+    ideas: [sample.ideas[0], { ...ideaB, weekId: sample.weeks[1].id }],
+    cards: sample.cards.filter((card) => card.ideaId === "idea-a" || card.ideaId === "idea-b"),
+  });
+  assert.equal(series.weeks.length, 2);
+  assert.equal(series.weeks[1]?.title, sample.weeks[1].title);
+});
+
+test("a card can carry an https image and rejects other addresses", () => {
+  const sample = structuredClone(BOX_CAMPUS_SAMPLE);
+  const cards = sample.cards.map((card) =>
+    card.id === "lib-a"
+      ? { ...card, image: { src: "https://example.com/frame.jpg", alt: "노출 삼각형 도식" } }
+      : card,
+  );
+  const campus = parseCampus({ ...sample, cards });
+  const card = campus.cards.find((item) => item.id === "lib-a") as { image?: { alt: string } };
+  assert.equal(card.image?.alt, "노출 삼각형 도식");
+  let state = createInitialState({ ...sample, cards }, FIXED_NOW);
+  state = { ...state, progress: { ...state.progress, dailyGoal: 40 } };
+  const frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  assert.equal(
+    frame.view.blocks.some(
+      (block) => block.kind === "image" && block.alt === "노출 삼각형 도식",
+    ),
+    true,
+  );
+  assert.throws(
+    () =>
+      parseCampus({
+        ...sample,
+        cards: sample.cards.map((card) =>
+          card.id === "lib-a" ? { ...card, image: { src: "http://example.com/a.jpg", alt: "도식" } } : card,
+        ),
+      }),
+    (error: unknown) => error === "캠퍼스 묶음: 사진은 https 주소여야 합니다.",
+  );
+});
