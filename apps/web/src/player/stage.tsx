@@ -17,24 +17,27 @@ export function Stage() {
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
+      if (accountsOpen || importOpen) return;
       if (event.key === "ArrowDown") actions.advance();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [actions]);
+  }, [accountsOpen, actions, importOpen]);
 
   return (
     <main
       className="mx-auto min-h-dvh w-full max-w-[430px] bg-background"
       onTouchStart={(event) => {
+        if (accountsOpen || importOpen) return;
         startY.current = event.changedTouches[0]?.clientY ?? 0;
       }}
       onTouchEnd={(event) => {
+        if (accountsOpen || importOpen) return;
         const endY = event.changedTouches[0]?.clientY ?? 0;
         if (startY.current - endY > 48) actions.advance();
       }}
       onWheel={(event) => {
-        if (wheelLock.current || event.deltaY < 48) return;
+        if (accountsOpen || importOpen || wheelLock.current || event.deltaY < 48) return;
         wheelLock.current = true;
         actions.advance();
         window.setTimeout(() => {

@@ -94,6 +94,20 @@ export function CampusProvider({ children }: { children: ReactNode }) {
     toast(state.notice);
   }, [state?.notice, state?.transitionId]);
 
+  useEffect(() => {
+    if (!state || !library) return;
+    if (library.shelves[state.campus.id]) return;
+    const stored: Library = {
+      ...library,
+      shelves: { ...library.shelves, [state.campus.id]: dumpState(state) },
+      order: library.order.includes(state.campus.id)
+        ? library.order
+        : [...library.order, state.campus.id],
+    };
+    window.localStorage.setItem(LIBRARY_KEY, JSON.stringify(stored));
+    queryClient.setQueryData(["library"], stored);
+  }, [library, queryClient, state]);
+
   const value = useMemo<CampusContextValue | null>(() => {
     if (!state || !library) return null;
     const now = () => Date.now();

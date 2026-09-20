@@ -993,6 +993,14 @@ function record(state, event, now) {
     }, now);
   }
 
+  if (event.kind === "cancel-advisor") {
+    if (base.session.kind !== "advisor") return base;
+    return withBump(base, {
+      session: { kind: "feed", feed: base.session.returnTo },
+      notice: null,
+    }, now);
+  }
+
   if (event.kind === "reset-sample") {
     if (!event.raw) return base;
     var resetState = createInitialState(event.raw, now);
@@ -1004,6 +1012,7 @@ function record(state, event, now) {
     event.transitionId &&
     event.kind !== "import-campus" &&
     event.kind !== "start-advisor" &&
+    event.kind !== "cancel-advisor" &&
     event.transitionId !== base.transitionId
   ) {
     return base;

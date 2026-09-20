@@ -2,6 +2,7 @@
 
 import { useForm } from "@tanstack/react-form";
 import { BookmarkIcon } from "lucide-react";
+import { toast } from "sonner";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,9 +40,15 @@ export function FeedView({
 
       <div
         key={frame.transitionId}
-        className="flex flex-1 animate-in flex-col justify-end px-5 pt-16 pb-8 fade-in slide-in-from-bottom-4 duration-300"
+        className="flex flex-1 animate-in flex-col justify-center px-5 pt-16 pb-6 fade-in slide-in-from-bottom-4 duration-300"
       >
-        {split.hero ? <Hero block={split.hero} /> : null}
+        {split.hero ? (
+          <Hero block={split.hero} />
+        ) : (
+          <h1 className="text-2xl leading-snug font-semibold tracking-tight text-balance">
+            {state.campus.title}
+          </h1>
+        )}
         {split.verdict ? (
           <p className={split.verdict.tone === "retry" ? "mt-3 text-sm text-destructive" : "mt-3 text-sm text-foreground"}>
             {split.verdict.text}
@@ -68,8 +75,8 @@ export function FeedView({
                 key={`${block.kind}-${index}`}
                 className={
                   block.kind === "source" || block.kind === "badge"
-                    ? "mt-1 text-sm text-muted-foreground"
-                    : "mt-1 text-sm leading-5"
+                    ? "mt-1 line-clamp-3 text-sm text-muted-foreground"
+                    : "mt-1 line-clamp-4 text-sm leading-5"
                 }
               >
                 {block.text}
@@ -81,7 +88,15 @@ export function FeedView({
                 variant="link"
                 className="h-auto px-0 text-muted-foreground"
                 onClick={() => {
-                  void navigator.clipboard?.writeText(state.authorBrief ?? "");
+                  const brief = state.authorBrief;
+                  if (!brief || !navigator.clipboard?.writeText) {
+                    toast("이 브라우저에서는 복사할 수 없습니다");
+                    return;
+                  }
+                  void navigator.clipboard.writeText(brief).then(
+                    () => toast("브리프를 복사했습니다"),
+                    () => toast("이 브라우저에서는 복사할 수 없습니다"),
+                  );
                 }}
               >
                 브리프 복사
@@ -98,7 +113,7 @@ export function FeedView({
               onClick={onOpenAccounts}
             >
               <Avatar size="lg">
-                <AvatarFallback>{initial}</AvatarFallback>
+                <AvatarFallback>{initial || "주"}</AvatarFallback>
               </Avatar>
             </Button>
             <Button
@@ -145,14 +160,30 @@ export function FeedView({
             transitionId={frame.transitionId}
           />
         ) : null}
+        {view.role === "advisor" ? (
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full text-muted-foreground"
+            onClick={() => actions.dispatch({ kind: "cancel-advisor" })}
+          >
+            돌아가기
+          </Button>
+        ) : null}
       </div>
     </section>
   );
 }
 
 function Hero({ block }: { block: Block }) {
+  const reading =
+    block.text.length > 80
+      ? "text-xl"
+      : block.text.length > 36
+        ? "text-2xl"
+        : "text-3xl";
   return (
-    <h1 className="text-3xl leading-snug font-semibold tracking-tight text-balance">
+    <h1 className={`${reading} leading-snug font-semibold tracking-tight text-balance`}>
       {block.text}
     </h1>
   );

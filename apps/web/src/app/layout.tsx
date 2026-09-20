@@ -16,11 +16,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "상자",
   description: "주제를 계정처럼 넘겨 보는 학습 피드",
-  appleWebApp: { capable: true, title: "상자" },
+  appleWebApp: {
+    capable: true,
+    title: "상자",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0d0f12",
+  themeColor: "#111111",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",

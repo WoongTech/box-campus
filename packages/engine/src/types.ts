@@ -135,6 +135,7 @@ export type Frame =
 export type CampusEvent =
   | { kind: "import-campus"; raw: unknown; transitionId?: string }
   | { kind: "start-advisor" }
+  | { kind: "cancel-advisor" }
   | { kind: "reset-sample"; raw: unknown }
   | { kind: "open-strip"; week?: number; transitionId?: string }
   | { kind: "close-strip"; transitionId?: string }

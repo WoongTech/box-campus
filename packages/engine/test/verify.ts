@@ -141,6 +141,22 @@ test("a new date resets the day count and there is no streak flag", () => {
   assert.equal("brokenStreak" in dayState.progress, false);
 });
 
+test("leaving the design questions returns to the same card", () => {
+  let state = createInitialState(BOX_CAMPUS_SAMPLE, FIXED_NOW);
+  const before = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  state = record(state, { kind: "start-advisor" }, FIXED_NOW);
+  state = record(
+    state,
+    { kind: "submit-text", transitionId: state.transitionId, actionId: "adv-0", value: "도시의 나무" },
+    FIXED_NOW,
+  );
+  state = record(state, { kind: "cancel-advisor" }, FIXED_NOW);
+  const after = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  assert.equal(after.view.roleLabel, before.view.roleLabel);
+  assert.equal(state.campus.id, "sample-photo-exposure");
+  assert.equal(state.session.kind, "feed");
+});
+
 test("dump and parse reload the first card without a notice", () => {
   const round: PlayerState = createInitialState(BOX_CAMPUS_SAMPLE, FIXED_NOW);
   const reloaded = parseState(dumpState(round), BOX_CAMPUS_SAMPLE, FIXED_NOW);

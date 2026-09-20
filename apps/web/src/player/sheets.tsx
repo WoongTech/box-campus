@@ -11,6 +11,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
+import { parsePastedCampus } from "./parse-paste";
 import { useCampus } from "./campus-provider";
 
 export function AccountSheet({
@@ -23,15 +24,19 @@ export function AccountSheet({
   onAdd: () => void;
 }) {
   const { state, library, actions } = useCampus();
+  const savedCount = library.saved.length;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="mx-auto max-h-[80dvh] max-w-[430px] rounded-t-2xl">
         <SheetHeader>
           <SheetTitle>따라가는 주제</SheetTitle>
-          <SheetDescription>보고 있는 주제입니다.</SheetDescription>
+          <SheetDescription>사진이 없어도 주제만 있으면 됩니다.</SheetDescription>
         </SheetHeader>
-        <div className="flex flex-col gap-1 px-4 pb-2">
+        <div className="flex max-h-[40dvh] flex-col gap-1 overflow-y-auto px-4 pb-2">
+          {library.order.length === 0 ? (
+            <p className="px-2 py-3 text-sm text-muted-foreground">아직 따라가는 주제가 없습니다.</p>
+          ) : null}
           {library.order.map((id) => {
             const name = titleOf(library.shelves[id], id);
             const current = id === state.campus.id;
@@ -47,23 +52,38 @@ export function AccountSheet({
                 }}
               >
                 <Avatar>
-                  <AvatarFallback>{name.trim().slice(0, 1)}</AvatarFallback>
+                  <AvatarFallback>{name.trim().slice(0, 1) || "주"}</AvatarFallback>
                 </Avatar>
-                <span>{name}</span>
+                <span className="truncate">{name}</span>
               </Button>
             );
           })}
         </div>
-        <div className="px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        {savedCount > 0 ? (
+          <p className="px-4 text-sm text-muted-foreground">저장한 장 {savedCount}</p>
+        ) : null}
+        <div className="flex flex-col gap-2 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <Button
             type="button"
+            className="w-full"
+              onClick={() => {
+                onOpenChange(false);
+                if (state.session.kind !== "feed") return;
+                actions.dispatch({ kind: "start-advisor" });
+              }}
+          >
+            새 주제
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
             className="w-full"
             onClick={() => {
               onOpenChange(false);
               onAdd();
             }}
           >
-            주제 추가
+            묶음 붙이기
           </Button>
         </div>
       </SheetContent>
@@ -82,17 +102,13 @@ export function ImportSheet({
   const form = useForm({
     defaultValues: { raw: "" },
     onSubmit: ({ value }) => {
-      let raw: unknown = { invalid: true };
-      try {
-        raw = JSON.parse(value.raw) as unknown;
-      } catch {
-        raw = { invalid: true };
-      }
+      const raw = parsePastedCampus(value.raw);
       actions.dispatch({
         kind: "import-campus",
         raw,
         transitionId: state.transitionId,
       });
+      if (isRejectedPaste(raw)) return;
       onOpenChange(false);
       form.reset();
     },
@@ -103,7 +119,7 @@ export function ImportSheet({
       <SheetContent side="bottom" className="mx-auto max-w-[430px] rounded-t-2xl">
         <SheetHeader>
           <SheetTitle>주제 넣기</SheetTitle>
-          <SheetDescription>채팅이 만든 묶음을 붙여 넣습니다.</SheetDescription>
+          <SheetDescription>JSON이거나, 채팅이 만든 묶음 그대로여도 됩니다. 그림은 없어도 됩니다.</SheetDescription>
         </SheetHeader>
         <form
           className="space-y-3 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
@@ -131,6 +147,10 @@ export function ImportSheet({
       </SheetContent>
     </Sheet>
   );
+}
+
+function isRejectedPaste(raw: unknown) {
+  return raw !== null && typeof raw === "object" && !Array.isArray(raw) && "invalid" in raw && !("id" in raw);
 }
 
 function titleOf(raw: string | undefined, fallback: string) {
