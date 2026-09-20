@@ -246,6 +246,11 @@ test("editor after a check carries the last explanation forward", () => {
       (block) => block.kind === "body" && block.text.startsWith("방금 정리:"),
     ),
   );
+  assert.ok(
+    frame.view.blocks.some(
+      (block) => block.kind === "title" && block.text.includes("배경을 흐리게"),
+    ),
+  );
 });
 
 test("dump and parse reload the first card without a notice", () => {
@@ -255,4 +260,105 @@ test("dump and parse reload the first card without a notice", () => {
   assert.equal(reloaded.state.notice, null);
   const frame = cardFrame(schedule(reloaded.state, FIXED_NOW, { kind: "resume" }));
   assert.equal(frame.view.roleLabel, "사서");
+});
+
+test("tapping back returns to the previous card and does not count it again", () => {
+  let state = createInitialState(BOX_CAMPUS_SAMPLE, FIXED_NOW);
+  let frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  assert.equal(state.session.kind, "feed");
+  if (state.session.kind !== "feed") return;
+  const firstId = state.session.feed.current.cardId;
+  state = record(state, { kind: "advance", transitionId: frame.transitionId }, FIXED_NOW);
+  frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  assert.equal(state.session.kind, "feed");
+  if (state.session.kind !== "feed") return;
+  assert.notEqual(state.session.feed.current.cardId, firstId);
+  assert.equal(state.progress.dayPulse.completed, 1);
+  state = record(state, { kind: "back", transitionId: frame.transitionId }, FIXED_NOW);
+  assert.equal(state.session.kind, "feed");
+  if (state.session.kind !== "feed") return;
+  assert.equal(state.session.feed.current.cardId, firstId);
+  assert.equal(state.progress.dayPulse.completed, 1);
+  frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  state = record(state, { kind: "advance", transitionId: frame.transitionId }, FIXED_NOW);
+  assert.equal(state.progress.dayPulse.completed, 1);
+  assert.equal(state.session.kind, "feed");
+  if (state.session.kind === "feed") {
+    assert.notEqual(state.session.feed.current.cardId, firstId);
+  }
+});
+
+function correctChoice(
+  state: PlayerState,
+  options: { actionId: string; label: string }[],
+) {
+  if (state.session.kind !== "feed") return options[0].actionId;
+  const cardId = state.session.feed.current.cardId;
+  const card = (
+    state.campus.cards as Array<{
+      id: string;
+      choices?: { isCorrect?: boolean }[];
+      patches?: { closesHole?: boolean }[];
+    }>
+  ).find((item) => item.id === cardId);
+  const index = card?.choices
+    ? card.choices.findIndex((choice) => choice.isCorrect)
+    : card?.patches
+      ? card.patches.findIndex((patch) => patch.closesHole)
+      : 0;
+  return options[index >= 0 ? index : 0]?.actionId ?? options[0].actionId;
+}
+
+test("one idea finishes before the next, then the feed can reopen it", () => {
+  let state = createInitialState(BOX_CAMPUS_SAMPLE, FIXED_NOW);
+  state = {
+    ...state,
+    progress: { ...state.progress, dailyGoal: 40 },
+  };
+  const seen: string[] = [];
+  for (let step = 0; step < 80; step++) {
+    const frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+    if (frame.view.role === "hub") break;
+    if (state.session.kind !== "feed") break;
+    const cardId = state.session.feed.current.cardId;
+    if (cardId && seen[seen.length - 1] !== cardId) seen.push(cardId);
+    if (frame.view.control.kind === "choices") {
+      state = record(
+        state,
+        {
+          kind: "activate",
+          transitionId: frame.transitionId,
+          actionId: correctChoice(state, frame.view.control.options),
+        },
+        FIXED_NOW,
+      );
+    } else {
+      state = record(state, { kind: "advance", transitionId: frame.transitionId }, FIXED_NOW);
+    }
+  }
+  assert.deepEqual(seen.slice(0, 8), [
+    "lib-a",
+    "tutor-a",
+    "editor-a",
+    "room-a",
+    "lib-b",
+    "tutor-b",
+    "editor-b",
+    "room-b",
+  ]);
+  assert.equal(seen.includes("lib-e"), true);
+  assert.equal(seen.at(-1), "room-f");
+  const frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  assert.equal(frame.view.role, "hub");
+  assert.ok(frame.view.blocks.some((block) => block.text === "이 주제의 장을 다 봤습니다"));
+  state = record(
+    state,
+    { kind: "open-idea", ideaId: "idea-c", transitionId: state.transitionId },
+    FIXED_NOW,
+  );
+  assert.equal(state.session.kind, "feed");
+  if (state.session.kind === "feed") {
+    assert.equal(state.session.feed.current.cardId, "lib-c");
+    assert.equal(state.session.feed.hub, false);
+  }
 });

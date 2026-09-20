@@ -77,6 +77,7 @@ export type FeedBookmark = {
   resumeFeed?: FeedBookmark;
   tutorSecondLook?: string | null;
   bridgeHint?: string | null;
+  trail?: { cardId: string; slotIndex: number; ideaId: string }[];
 };
 
 export type Session =
@@ -144,10 +145,13 @@ export type CampusEvent =
   | { kind: "cancel-advisor" }
   | { kind: "reset-sample"; raw: unknown }
   | { kind: "open-strip"; week?: number; transitionId?: string }
+  | { kind: "open-idea"; ideaId: string; transitionId?: string }
+  | { kind: "open-card"; cardId: string; transitionId?: string }
   | { kind: "close-strip"; transitionId?: string }
   | { kind: "select-week"; week: number; transitionId?: string }
   | { kind: "activate"; transitionId: string; actionId: string; raw?: unknown }
   | { kind: "advance"; transitionId: string }
+  | { kind: "back"; transitionId: string }
   | { kind: "submit-text"; transitionId: string; actionId: string; value: string };
 
 export type ScheduleIntent = { kind: "resume" };

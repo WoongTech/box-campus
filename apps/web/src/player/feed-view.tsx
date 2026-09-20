@@ -19,7 +19,7 @@ export function FeedView({
 }: {
   onOpenAccounts: () => void;
 }) {
-  const { state, frame, actions, meta } = useCampus();
+  const { state, frame, actions, meta, nav } = useCampus();
   if (frame.kind !== "card") return null;
   const view = frame.view;
   const split = splitBlocks(view.blocks);
@@ -34,12 +34,7 @@ export function FeedView({
     !hasChoices && split.meta.length > 0 && view.role !== "advisor";
 
   return (
-    <section
-      className="relative flex min-h-dvh flex-col"
-      onClick={() => {
-        if (canTapAdvance) actions.advance();
-      }}
-    >
+    <section className="relative flex min-h-dvh flex-col">
       {typeof view.pentadIndex === "number" ? (
         <div
           className="pointer-events-none absolute inset-x-3 top-[max(0.65rem,env(safe-area-inset-top))] z-10 flex gap-1"
@@ -60,7 +55,8 @@ export function FeedView({
         className={[
           "flex min-h-0 flex-1 flex-col px-5 pt-[max(3.25rem,env(safe-area-inset-top)+2.5rem)]",
           hasChoices || hasText ? "pb-3" : "pb-2",
-          "animate-in fade-in slide-in-from-bottom-3 duration-300",
+          "animate-in fade-in duration-300",
+          nav === "back" ? "slide-in-from-left-8" : "slide-in-from-right-8",
         ].join(" ")}
       >
         <div
@@ -70,6 +66,15 @@ export function FeedView({
               : "flex min-h-0 flex-1 flex-col justify-center gap-4 text-center"
           }
         >
+          {view.role === "advisor"
+            ? split.meta
+                .filter((block) => block.kind === "eyebrow")
+                .map((block, index) => (
+                  <p key={`step-${index}`} className="text-xs font-medium text-muted-foreground">
+                    {block.text}
+                  </p>
+                ))
+            : null}
           {hasChoices
             ? promptEyebrows.map((block, index) => (
                 <p
@@ -101,6 +106,7 @@ export function FeedView({
           {split.reading.map((block, index) => (
             <ReadingLine key={`${block.kind}-${index}`} block={block} centered={!hasChoices && !hasText} />
           ))}
+          {view.role === "hub" ? <TopicRail /> : null}
           {showMetaInStrip
             ? split.meta.map((block, index) => (
                 <MetaLine key={`${block.kind}-${index}`} block={block} centered={!hasChoices && !hasText} />
@@ -169,6 +175,7 @@ export function FeedView({
               className="size-11 rounded-full"
               aria-label={meta.saved ? "저장됨" : "저장"}
               aria-pressed={meta.saved}
+              disabled={!meta.cardId}
               onClick={actions.toggleSave}
             >
               <BookmarkIcon
@@ -225,12 +232,61 @@ export function FeedView({
           </Button>
         ) : null}
 
-        {canTapAdvance ? (
-          <p className="text-center text-xs text-muted-foreground">탭하거나 위로 밀어 다음</p>
+        {view.role === "hub" ? (
+          <Button type="button" className="min-h-11 w-full" onClick={onOpenAccounts}>
+            주제 갤러리
+          </Button>
+        ) : null}
+
+        {canTapAdvance && view.role === "day-close" ? (
+          <p className="text-center text-xs text-muted-foreground">오늘은 여기까지입니다. 내일 이어서 봅니다.</p>
+        ) : null}
+
+        {canTapAdvance && view.role !== "day-close" && view.role !== "hub" ? (
+          <p className="text-center text-xs text-muted-foreground">왼쪽은 이전, 오른쪽은 다음</p>
         ) : null}
       </div>
     </section>
   );
+}
+
+function TopicRail() {
+  const { state, library, actions } = useCampus();
+  if (library.order.length === 0) return null;
+  return (
+    <div className="mx-auto flex w-full max-w-[22rem] gap-2 overflow-x-auto pt-2">
+      {library.order.map((id) => {
+        const name = titleFromShelf(library.shelves[id], id);
+        const current = id === state.campus.id;
+        return (
+          <button
+            key={id}
+            type="button"
+            className={`flex h-28 w-24 shrink-0 flex-col justify-between rounded-2xl border px-3 py-3 text-left ${
+              current ? "border-foreground bg-foreground text-background" : "border-border bg-card/40"
+            }`}
+            onClick={(event) => {
+              event.stopPropagation();
+              if (!current) actions.openAccount(id);
+            }}
+          >
+            <span className="text-2xl font-semibold">{name.trim().slice(0, 1) || "주"}</span>
+            <span className="line-clamp-2 text-xs font-medium">{name}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function titleFromShelf(raw: string | undefined, fallback: string) {
+  if (!raw) return fallback;
+  try {
+    const parsed = JSON.parse(raw) as { campus?: { title?: string } };
+    return parsed.campus?.title || fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 function Hero({ block, centered }: { block: Block; centered: boolean }) {

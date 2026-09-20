@@ -8,6 +8,7 @@ import { FeedView } from "./feed-view";
 import { StripView } from "./strip-view";
 
 const WHEEL_LOCK_MS = 450;
+const LEFT_ZONE = 0.33;
 
 function isTextFieldFocused() {
   if (typeof document === "undefined") return false;
@@ -23,42 +24,74 @@ export function Stage() {
   const [accountsOpen, setAccountsOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const startY = useRef(0);
+  const startX = useRef(0);
   const wheelLock = useRef(false);
+  const skipClick = useRef(false);
 
+  const cardRole = frame.kind === "card" ? frame.view.role : "";
   const interactionBlocked = accountsOpen || importOpen || fieldLocked;
+
+  function goNext() {
+    if (frame.kind !== "card") return;
+    if (cardRole === "hub") {
+      setAccountsOpen(true);
+      return;
+    }
+    if (cardRole === "day-close") return;
+    actions.advance();
+  }
+
+  function goBack() {
+    if (frame.kind !== "card") return;
+    actions.back();
+  }
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       if (interactionBlocked || isTextFieldFocused()) return;
-      if (event.key === "ArrowDown") actions.advance();
+      if (event.key === "ArrowLeft" || event.key === "ArrowUp") goBack();
+      if (event.key === "ArrowRight" || event.key === "ArrowDown") goNext();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [actions, interactionBlocked]);
+  }, [interactionBlocked, cardRole, actions]);
 
   return (
     <main
-      className="mx-auto min-h-dvh w-full max-w-[390px] bg-background"
+      className="relative mx-auto min-h-dvh w-full max-w-[390px] bg-background"
+      onClick={(event) => {
+        if (interactionBlocked || isTextFieldFocused()) return;
+        if (skipClick.current) {
+          skipClick.current = false;
+          return;
+        }
+        const bounds = event.currentTarget.getBoundingClientRect();
+        const fromLeft = (event.clientX - bounds.left) / bounds.width;
+        if (fromLeft < LEFT_ZONE) goBack();
+        else goNext();
+      }}
       onTouchStart={(event) => {
         if (interactionBlocked || isTextFieldFocused()) return;
         startY.current = event.changedTouches[0]?.clientY ?? 0;
+        startX.current = event.changedTouches[0]?.clientX ?? 0;
       }}
       onTouchEnd={(event) => {
         if (interactionBlocked || isTextFieldFocused()) return;
         const endY = event.changedTouches[0]?.clientY ?? 0;
-        if (startY.current - endY > 48) actions.advance();
+        const endX = event.changedTouches[0]?.clientX ?? 0;
+        const deltaY = startY.current - endY;
+        const deltaX = endX - startX.current;
+        if (Math.abs(deltaX) < 48 && Math.abs(deltaY) < 48) return;
+        skipClick.current = true;
+        if (deltaX > 48 && Math.abs(deltaX) > Math.abs(deltaY)) goBack();
+        else if (deltaY > 48) goNext();
       }}
       onWheel={(event) => {
-        if (
-          interactionBlocked ||
-          isTextFieldFocused() ||
-          wheelLock.current ||
-          event.deltaY < 48
-        ) {
-          return;
-        }
+        if (interactionBlocked || isTextFieldFocused() || wheelLock.current) return;
+        if (Math.abs(event.deltaY) < 48) return;
         wheelLock.current = true;
-        actions.advance();
+        if (event.deltaY < 0) goBack();
+        else goNext();
         window.setTimeout(() => {
           wheelLock.current = false;
         }, WHEEL_LOCK_MS);

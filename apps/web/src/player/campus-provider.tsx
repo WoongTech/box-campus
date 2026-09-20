@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useMemo, type ReactNode } from "react";
+import { use, useEffect, useMemo, useRef, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createContext } from "react";
 import { toast } from "sonner";
@@ -31,13 +31,17 @@ type CampusContextValue = {
   actions: {
     dispatch: (event: CampusEvent) => void;
     advance: () => void;
+    back: () => void;
     toggleSave: () => void;
     openAccount: (id: string) => void;
+    openIdea: (ideaId: string) => void;
+    openSaved: (cardId: string) => void;
   };
   meta: {
     cardId: string;
     saved: boolean;
   };
+  nav: "next" | "back";
 };
 
 const CampusContext = createContext<CampusContextValue | null>(null);
@@ -88,6 +92,7 @@ export function CampusProvider({ children }: { children: ReactNode }) {
 
   const state = sessionQuery.data;
   const library = libraryQuery.data;
+  const navDirection = useRef<"next" | "back">("next");
 
   useEffect(() => {
     if (!state?.notice) return;
@@ -149,7 +154,57 @@ export function CampusProvider({ children }: { children: ReactNode }) {
       commit(parseState(raw, BOX_CAMPUS_SAMPLE, now()).state);
     }
 
+    function openIdea(ideaId: string) {
+      const current = queryClient.getQueryData<PlayerState>(["session"]);
+      if (!current) return;
+      commit(
+        record(
+          current,
+          { kind: "open-idea", ideaId, transitionId: current.transitionId },
+          now(),
+        ),
+      );
+    }
+
+    function openSaved(cardId: string) {
+      const current = queryClient.getQueryData<PlayerState>(["session"]);
+      const shelf = queryClient.getQueryData<Library>(["library"]);
+      if (!current || !shelf) return;
+      const onThisCampus = current.campus.cards.some((card) => card.id === cardId);
+      if (onThisCampus) {
+        commit(
+          record(
+            current,
+            { kind: "open-card", cardId, transitionId: current.transitionId },
+            now(),
+          ),
+        );
+        return;
+      }
+      for (const id of shelf.order) {
+        const raw = shelf.shelves[id];
+        if (!raw) continue;
+        let parsed: { campus?: { cards?: { id: string }[] } };
+        try {
+          parsed = JSON.parse(raw) as { campus?: { cards?: { id: string }[] } };
+        } catch {
+          continue;
+        }
+        if (!parsed.campus?.cards?.some((card) => card.id === cardId)) continue;
+        const opened = parseState(raw, BOX_CAMPUS_SAMPLE, now()).state;
+        commit(
+          record(
+            opened,
+            { kind: "open-card", cardId, transitionId: opened.transitionId },
+            now(),
+          ),
+        );
+        return;
+      }
+    }
+
     function advance() {
+      navDirection.current = "next";
       const current = queryClient.getQueryData<PlayerState>(["session"]);
       const shelf = queryClient.getQueryData<Library>(["library"]);
       if (!current || !shelf) return;
@@ -163,6 +218,17 @@ export function CampusProvider({ children }: { children: ReactNode }) {
       const index = order.indexOf(beforeId);
       const nextId = order[(index + 1) % order.length];
       if (nextId && nextId !== next.campus.id) openAccount(nextId);
+    }
+
+    function back() {
+      navDirection.current = "back";
+      const current = queryClient.getQueryData<PlayerState>(["session"]);
+      if (!current) return;
+      const currentFrame = schedule(current, now(), { kind: "resume" });
+      if (currentFrame.kind !== "card") return;
+      commit(
+        record(current, { kind: "back", transitionId: currentFrame.transitionId }, now()),
+      );
     }
 
     function toggleSave() {
@@ -181,11 +247,12 @@ export function CampusProvider({ children }: { children: ReactNode }) {
       state,
       frame: schedule(state, now(), { kind: "resume" }),
       library,
-      actions: { dispatch, advance, toggleSave, openAccount },
+      actions: { dispatch, advance, back, toggleSave, openAccount, openIdea, openSaved },
       meta: {
         cardId: cardIdOf(state),
         saved: library.saved.includes(cardIdOf(state)),
       },
+      nav: navDirection.current,
     };
   }, [library, queryClient, state]);
 

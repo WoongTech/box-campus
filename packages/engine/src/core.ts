@@ -464,22 +464,10 @@ function pickNextLearning(campus, feed, progress, now) {
     var bundle = cardsForIdea(campus, ideaId);
     var card = bundle[role];
     if (!card) return { hub: true };
-    var candidateIdea = ideaId;
-    if (
-      feed.recentIdeaIds.length > 0 &&
-      feed.recentIdeaIds[feed.recentIdeaIds.length - 1] === candidateIdea
-    ) {
-      var alt = pickAlternateIdea(campus, feed, candidateIdea);
-      if (alt) {
-        candidateIdea = alt;
-        bundle = cardsForIdea(campus, candidateIdea);
-        card = bundle[role];
-      }
-    }
     return {
       card: card,
       slotIndex: nextSlot + 1,
-      ideaId: candidateIdea,
+      ideaId: ideaId,
       clearWrong: false,
     };
   }
@@ -488,13 +476,6 @@ function pickNextLearning(campus, feed, progress, now) {
   var idx = order.indexOf(ideaId);
   for (var i = idx + 1; i < order.length; i++) {
     var nextIdea = order[i];
-    if (
-      feed.recentIdeaIds.length > 0 &&
-      feed.recentIdeaIds[feed.recentIdeaIds.length - 1] === nextIdea &&
-      order.length > 1
-    ) {
-      continue;
-    }
     var libBundle = cardsForIdea(campus, nextIdea);
     if (libBundle.librarian) {
       return {
@@ -506,14 +487,6 @@ function pickNextLearning(campus, feed, progress, now) {
     }
   }
   return { hub: true };
-}
-
-function pickAlternateIdea(campus, feed, avoidId) {
-  var order = orderedIdeaIds(campus);
-  for (var i = 0; i < order.length; i++) {
-    if (order[i] !== avoidId) return order[i];
-  }
-  return null;
 }
 
 function applyTutorSm2(prev, grade, now, transitionId) {
@@ -594,17 +567,13 @@ function projectCardView(state, encounter) {
       weekLabel: null,
       pentadIndex: null,
       blocks: [
-        { kind: "title", text: "한 바퀴를 마쳤습니다" },
-        { kind: "body", text: "다음에 무엇을 할까요?" },
+        { kind: "title", text: "이 주제의 장을 다 봤습니다" },
+        {
+          kind: "body",
+          text: "다른 주제로 이어가거나, 저장한 장을 다시 열 수 있습니다. 새 장은 주제를 적거나 묶음을 붙여 넣습니다.",
+        },
       ],
-      control: {
-        kind: "choices",
-        options: [
-          { actionId: actionId("hub", 0), label: "한 주제로" },
-          { actionId: actionId("hub", 1), label: "주 보기" },
-          { actionId: actionId("hub", 2), label: "처음부터" },
-        ],
-      },
+      control: { kind: "advance", label: "주제 갤러리" },
       dayCount: state.progress.dayPulse.completed,
       authorBrief: state.authorBrief,
     };
@@ -742,11 +711,12 @@ function projectCardView(state, encounter) {
 function projectAdvisorView(state) {
   var session = state.session;
   var stage = session.stage;
-  var blocks = [];
+  var stepByStage = { topic: 1, "finish-line": 2, baseline: 3, rhythm: 4, lens: 5 };
+  var blocks = [{ kind: "eyebrow", text: (stepByStage[stage] || 1) + " / 5" }];
   var control;
   if (stage === "topic") {
     blocks.push({ kind: "title", text: "무엇을 배우고 싶나요?" });
-    blocks.push({ kind: "body", text: "한 줄 주제를 적어 주세요." });
+    blocks.push({ kind: "body", text: "한 줄이면 됩니다. 이 답이 새 주제의 이름이 됩니다." });
     control = {
       kind: "text",
       actionId: actionId("adv", 0),
@@ -756,6 +726,7 @@ function projectAdvisorView(state) {
     };
   } else if (stage === "finish-line") {
     blocks.push({ kind: "title", text: "끝에 무엇을 만들고 싶나요?" });
+    blocks.push({ kind: "body", text: "설명, 제작, 문제 풀이 중 이 주제의 끝입니다." });
     control = {
       kind: "choices",
       options: [
@@ -766,6 +737,7 @@ function projectAdvisorView(state) {
     };
   } else if (stage === "baseline") {
     blocks.push({ kind: "title", text: "지금 어디쯤인가요?" });
+    blocks.push({ kind: "body", text: "처음이면 용어부터, 해 본 적이 있으면 구멍부터 잡습니다." });
     control = {
       kind: "choices",
       options: [
@@ -776,6 +748,7 @@ function projectAdvisorView(state) {
     };
   } else if (stage === "rhythm") {
     blocks.push({ kind: "title", text: "하루에 몇 장이 맞나요?" });
+    blocks.push({ kind: "body", text: "이 수에 닿으면 오늘은 여기서 멈춥니다." });
     control = {
       kind: "choices",
       options: [
@@ -785,6 +758,7 @@ function projectAdvisorView(state) {
     };
   } else if (stage === "lens") {
     blocks.push({ kind: "title", text: "어떤 분야로 비유할까요?" });
+    blocks.push({ kind: "body", text: "마지막 장은 이 분야의 말로 같은 내용을 다시 봅니다." });
     control = {
       kind: "choices",
       options: [
@@ -893,6 +867,7 @@ function buildAuthorBrief(answers) {
     "",
     "위 설정으로 6주 캠퍼스 묶음을 box-campus AUTHOR.md 스키마에 맞게 작성해 주세요.",
     "1주차에 학습 설계 카드 두 개, 2–6주는 제목과 약속만. 사실을 지어내지 마세요.",
+    "작성한 묶음은 앱의 주제 갤러리에서 붙여 넣으면 이 주제가 됩니다.",
   ].join("\n");
 }
 
@@ -1094,6 +1069,35 @@ function record(state, event, now) {
     return base;
   }
 
+  if (event.kind === "open-idea" || event.kind === "open-card") {
+    if (base.session.kind === "advisor") return base;
+    var sourceFeed = base.session.kind === "strip" ? base.session.returnTo : base.session.feed;
+    var targetCard = null;
+    if (event.kind === "open-idea") {
+      var openedBundle = cardsForIdea(base.campus, event.ideaId);
+      targetCard = openedBundle.librarian || null;
+    } else {
+      targetCard = findCard(base.campus, event.cardId);
+    }
+    if (!targetCard) return base;
+    var openSlot = SLOT_ROLES.indexOf(targetCard.role);
+    if (openSlot < 0) openSlot = 0;
+    var openedFeed = {
+      current: beginEncounter(targetCard),
+      slotIndex: openSlot,
+      ideaId: targetCard.ideaId,
+      completedCardIds: sourceFeed.completedCardIds || [],
+      recentIdeaIds: sourceFeed.recentIdeaIds || [],
+      hub: false,
+    };
+    return withBump(base, {
+      session: {
+        kind: "feed",
+        feed: trailed(openedFeed, sourceFeed),
+      },
+    }, now);
+  }
+
   if (event.kind === "open-strip") {
     if (base.session.kind !== "feed") return base;
     return withBump(base, {
@@ -1132,6 +1136,10 @@ function record(state, event, now) {
   if (event.kind === "submit-text") return base;
 
   var feed = base.session.feed;
+
+  if (event.kind === "back") {
+    return recordBack(base, feed, now);
+  }
 
   if (feed.hub || feed.current.role === "hub") {
     if (event.kind === "activate") {
@@ -1308,6 +1316,41 @@ function recordActivate(state, feed, event, now) {
   return state;
 }
 
+function trailed(nextFeed, fromFeed) {
+  var trail = (fromFeed.trail || []).slice();
+  if (fromFeed.current && fromFeed.current.cardId) {
+    trail.push({
+      cardId: fromFeed.current.cardId,
+      slotIndex: fromFeed.slotIndex,
+      ideaId: fromFeed.ideaId,
+    });
+  }
+  if (trail.length > 40) trail = trail.slice(trail.length - 40);
+  return Object.assign({}, nextFeed, { trail: trail });
+}
+
+function recordBack(state, feed, now) {
+  var trail = feed.trail || [];
+  if (trail.length === 0) return state;
+  var prev = trail[trail.length - 1];
+  var card = findCard(state.campus, prev.cardId);
+  if (!card) return state;
+  return withBump(state, {
+    session: {
+      kind: "feed",
+      feed: {
+        current: beginEncounter(card),
+        slotIndex: prev.slotIndex,
+        ideaId: prev.ideaId,
+        completedCardIds: feed.completedCardIds,
+        recentIdeaIds: feed.recentIdeaIds,
+        hub: false,
+        trail: trail.slice(0, -1),
+      },
+    },
+  }, now);
+}
+
 function finishAdvance(state, progress, feed, completed, recent, resumeFeed, now) {
   var dailyGoal = progress.dailyGoal || DEFAULT_DAILY_GOAL;
   if (progress.dayPulse.completed >= dailyGoal) {
@@ -1325,6 +1368,7 @@ function finishAdvance(state, progress, feed, completed, recent, resumeFeed, now
           dayClose: true,
           dayCloseDate: progress.dayPulse.date,
           resumeFeed: resumeFeed,
+          trail: resumeFeed.trail || [],
         },
       },
     }, now);
@@ -1341,18 +1385,21 @@ function recordAdvance(state, feed, now) {
   if (enc.role === "day-close") return state;
 
   var card = findCard(state.campus, enc.cardId);
-  var completed = feed.completedCardIds.concat([enc.cardId]);
-  var recent = feed.recentIdeaIds.concat([feed.ideaId]);
+  var seen = feed.completedCardIds.indexOf(enc.cardId) >= 0;
+  var completed = seen ? feed.completedCardIds.slice() : feed.completedCardIds.concat([enc.cardId]);
+  var recent = seen ? feed.recentIdeaIds.slice() : feed.recentIdeaIds.concat([feed.ideaId]);
   if (recent.length > 3) recent = recent.slice(recent.length - 3);
 
   var progress = Object.assign({}, state.progress, {
     dayPulse: {
       date: state.progress.dayPulse.date,
-      completed: state.progress.dayPulse.completed + 1,
+      completed: seen
+        ? state.progress.dayPulse.completed
+        : state.progress.dayPulse.completed + 1,
     },
   });
 
-  if (progress.wrongTutor) {
+  if (progress.wrongTutor && !seen) {
     progress.wrongTutor = {
       cardId: progress.wrongTutor.cardId,
       cardsSinceWrong: progress.wrongTutor.cardsSinceWrong + 1,
@@ -1369,7 +1416,7 @@ function recordAdvance(state, feed, now) {
       recentIdeaIds: recent,
       hub: true,
     };
-    return finishAdvance(state, progress, feed, completed, recent, hubFeed, now);
+    return finishAdvance(state, progress, feed, completed, recent, trailed(hubFeed, feed), now);
   }
 
   if (!nextPick || !nextPick.card) {
@@ -1381,7 +1428,7 @@ function recordAdvance(state, feed, now) {
       recentIdeaIds: recent,
       hub: true,
     };
-    return finishAdvance(state, progress, feed, completed, recent, emptyHubFeed, now);
+    return finishAdvance(state, progress, feed, completed, recent, trailed(emptyHubFeed, feed), now);
   }
 
   if (nextPick.clearWrong) {
@@ -1411,7 +1458,7 @@ function recordAdvance(state, feed, now) {
     bridgeHint: bridgeHint,
   };
 
-  return finishAdvance(state, progress, feed, completed, recent, nextFeed, now);
+  return finishAdvance(state, progress, feed, completed, recent, trailed(nextFeed, feed), now);
 }
 
 function dumpState(state) {
