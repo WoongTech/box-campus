@@ -23,21 +23,29 @@ export function remoteConfigured() {
 }
 
 function getClient() {
-  if (client !== undefined) return client;
+  if (client) return client;
+  if (typeof window === "undefined") return null;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key || typeof window === "undefined") {
-    client = null;
-    return client;
-  }
+  if (!url || !key) return null;
   client = createClient(url, key, {
     auth: {
       detectSessionInUrl: true,
-      flowType: "implicit",
+      flowType: "pkce",
       persistSession: true,
     },
   });
   return client;
+}
+
+export async function finishAuthRedirect() {
+  if (typeof window === "undefined") return null;
+  const hadCode = new URLSearchParams(window.location.search).has("code");
+  const supabase = getClient();
+  if (!supabase) return hadCode ? "계정이 아직 이 화면에 붙지 않았습니다." : null;
+  const { data } = await supabase.auth.getSession();
+  if (data.session || !hadCode) return null;
+  return "이 브라우저에서 보낸 링크가 아닙니다. 여기서 다시 보내 주세요.";
 }
 
 export type RemoteUser = { id: string; email: string | null };

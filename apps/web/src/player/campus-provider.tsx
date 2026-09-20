@@ -20,6 +20,7 @@ import {
   bindRemoteStale,
   endRemoteApply,
   fetchShelf,
+  finishAuthRedirect,
   isRemoteNewer,
   localRemoteUser,
   localSyncedAt,
@@ -173,6 +174,12 @@ export function CampusProvider({ children }: { children: ReactNode }) {
   const reconciledUser = useRef<string | null>(null);
 
   useEffect(() => {
+    void finishAuthRedirect().then((message) => {
+      if (message) toast(message);
+    });
+  }, []);
+
+  useEffect(() => {
     if (!state?.notice) return;
     toast(state.notice);
   }, [state?.notice, state?.transitionId]);
@@ -267,13 +274,6 @@ export function CampusProvider({ children }: { children: ReactNode }) {
     bindRemoteStale(() => {
       void pullIfNewer("다른 기기의 기록을 가져왔습니다");
     });
-    const callbackUrl = new URL(window.location.href);
-    if (callbackUrl.searchParams.has("code")) {
-      toast("이 로그인 링크는 이 브라우저에 붙지 않습니다. 링크를 다시 보내 주세요.");
-      callbackUrl.searchParams.delete("code");
-      const next = `${callbackUrl.pathname}${callbackUrl.search}${callbackUrl.hash}`;
-      window.history.replaceState(window.history.state, "", next);
-    }
     const stopAuth = subscribeAuth((user) => {
       if (!user) {
         reconciledUser.current = null;
