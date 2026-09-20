@@ -74,6 +74,39 @@ export function placeCampus(input: {
   return { sessionText, library, id: campus.id, title: campus.title };
 }
 
+function campusSignature(raw: string | undefined) {
+  if (!raw) return "";
+  try {
+    const dumped = JSON.parse(raw) as { campus?: unknown };
+    return JSON.stringify(dumped.campus ?? null);
+  } catch {
+    return "";
+  }
+}
+
+export function absorbFeed(local: ShelfLibrary, incoming: ShelfLibrary, now: number): ShelfLibrary {
+  const shelves = { ...local.shelves };
+  const order = [...local.order];
+  const seen = new Set<string>();
+  for (const id of [...incoming.order, ...Object.keys(incoming.shelves)]) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const raw = incoming.shelves[id];
+    if (!raw) continue;
+    const campus = campusFromDump(raw);
+    if (!campus) continue;
+    if (!order.includes(id)) order.push(id);
+    const previous = shelves[id];
+    if (!previous) {
+      shelves[id] = raw;
+      continue;
+    }
+    if (campusSignature(previous) === campusSignature(raw)) continue;
+    shelves[id] = dumpState(keptState(previous, campus, now));
+  }
+  return { order, shelves, saved: local.saved };
+}
+
 export function describeShelf(sessionText: string | null, library: ShelfLibrary, requestedId?: string) {
   const stories = library.order.map((id) => ({
     id,

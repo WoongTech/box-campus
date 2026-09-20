@@ -776,8 +776,8 @@ function projectCardView(state, encounter) {
 function projectAdvisorView(state) {
   var session = state.session;
   var stage = session.stage;
-  var stepByStage = { topic: 1, "finish-line": 2, baseline: 3, rhythm: 4, lens: 5 };
-  var blocks = [{ kind: "eyebrow", text: (stepByStage[stage] || 1) + " / 5" }];
+  var stepByStage = { topic: 1, "finish-line": 2, baseline: 3, lens: 4 };
+  var blocks = [{ kind: "eyebrow", text: (stepByStage[stage] || 1) + " / 4" }];
   var control;
   if (stage === "topic") {
     blocks.push({ kind: "title", text: "무엇을 배우고 싶나요?" });
@@ -811,19 +811,9 @@ function projectAdvisorView(state) {
         { actionId: actionId("adv-bl", 2), label: "해 본 적 있다" },
       ],
     };
-  } else if (stage === "rhythm") {
-    blocks.push({ kind: "title", text: "하루에 몇 장이 맞나요?" });
-    blocks.push({ kind: "body", text: "이 수에 닿으면 오늘은 여기서 멈춥니다." });
-    control = {
-      kind: "choices",
-      options: [
-        { actionId: actionId("adv-rh", 0), label: "하루 5장" },
-        { actionId: actionId("adv-rh", 1), label: "하루 12장" },
-      ],
-    };
-  } else if (stage === "lens") {
+  } else if (stage === "lens" || stage === "rhythm") {
     blocks.push({ kind: "title", text: "어떤 분야로 비유할까요?" });
-    blocks.push({ kind: "body", text: "마지막 장은 이 분야의 말로 같은 내용을 다시 봅니다." });
+    blocks.push({ kind: "body", text: "네 번째 장은 이 분야의 말로 같은 내용을 다시 봅니다." });
     control = {
       kind: "choices",
       options: [
@@ -874,19 +864,11 @@ function schedule(state, now, intent) {
   }
 
   var feed = working.session.feed;
-  if (feed.dayClose) {
-    if (feed.dayCloseDate !== working.progress.dayPulse.date && feed.resumeFeed) {
-      working = Object.assign({}, working, {
-        session: { kind: "feed", feed: feed.resumeFeed },
-      });
-      feed = working.session.feed;
-    } else {
-      return {
-        kind: "card",
-        transitionId: working.transitionId,
-        view: projectDayCloseView(working),
-      };
-    }
+  if (feed.dayClose && feed.resumeFeed) {
+    working = Object.assign({}, working, {
+      session: { kind: "feed", feed: feed.resumeFeed },
+    });
+    feed = working.session.feed;
   }
   if (feed.hub || feed.current.role === "hub") {
     return {
@@ -927,12 +909,11 @@ function buildAuthorBrief(answers) {
     "주제: " + answers.topic,
     "끝 목표: " + finishLineLabel(answers.finishLine),
     "출발점: " + baselineLabel(answers.baseline),
-    "하루 " + answers.rhythm + "장",
     "비유 분야: " + lensLabel(answers.lens),
     "",
-    "위 설정으로 6주 캠퍼스 묶음을 box-campus AUTHOR.md 스키마에 맞게 작성해 주세요.",
-    "1주차에 학습 설계 카드 두 개, 2–6주는 제목과 약속만. 사실을 지어내지 마세요.",
-    "작성한 묶음은 앱의 주제 갤러리에서 붙여 넣으면 이 주제가 됩니다.",
+    "위 설정으로 묶음을 만드세요. format은 course, volume, series 중 주제에 맞는 것.",
+    "아이디어마다 네 장: 핵심 문장, 질문, 고칠 문장, 다른 분야 비유.",
+    "확인한 https 사진만 image에 넣으세요. 사실을 지어내지 마세요.",
   ].join("\n");
 }
 
@@ -1273,7 +1254,7 @@ function recordAdvisor(state, event, now) {
     var blIdx = parseInt(String(event.actionId).split("-")[2], 10);
     return withBump(state, {
       session: Object.assign({}, session, {
-        stage: "rhythm",
+        stage: "lens",
         answers: Object.assign({}, session.answers, {
           baseline: blMap[blIdx] || "new",
         }),
@@ -1282,12 +1263,8 @@ function recordAdvisor(state, event, now) {
   }
 
   if (session.stage === "rhythm") {
-    var rh = String(event.actionId).indexOf("adv-rh-1") >= 0 ? 12 : 5;
     return withBump(state, {
-      session: Object.assign({}, session, {
-        stage: "lens",
-        answers: Object.assign({}, session.answers, { rhythm: rh }),
-      }),
+      session: Object.assign({}, session, { stage: "lens" }),
     }, now);
   }
 
@@ -1300,12 +1277,9 @@ function recordAdvisor(state, event, now) {
     var campus = templateCampusFromAnswers(answers);
     var brief = buildAuthorBrief(answers);
     var newFeed = initialFeedBookmark(campus);
-    var rhythmGoal =
-      typeof answers.rhythm === "number" ? answers.rhythm : DEFAULT_DAILY_GOAL;
     return withBump(state, {
       campus: campus,
       authorBrief: brief,
-      progress: Object.assign({}, state.progress, { dailyGoal: rhythmGoal }),
       session: { kind: "feed", feed: newFeed },
     }, now);
   }
@@ -1417,27 +1391,6 @@ function recordBack(state, feed, now) {
 }
 
 function finishAdvance(state, progress, feed, completed, recent, resumeFeed, now) {
-  var dailyGoal = progress.dailyGoal || DEFAULT_DAILY_GOAL;
-  if (progress.dayPulse.completed >= dailyGoal) {
-    return withBump(state, {
-      progress: progress,
-      session: {
-        kind: "feed",
-        feed: {
-          current: { role: "day-close", phase: "open" },
-          slotIndex: feed.slotIndex,
-          ideaId: feed.ideaId,
-          completedCardIds: completed,
-          recentIdeaIds: recent,
-          hub: false,
-          dayClose: true,
-          dayCloseDate: progress.dayPulse.date,
-          resumeFeed: resumeFeed,
-          trail: resumeFeed.trail || [],
-        },
-      },
-    }, now);
-  }
   return withBump(state, {
     progress: progress,
     session: { kind: "feed", feed: resumeFeed },

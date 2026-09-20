@@ -153,7 +153,8 @@ export function Stage() {
         <HomeView
           onCompose={() => setComposeOpen(true)}
           onOpenStory={() => setSurface("story")}
-          onOpenIdea={(ideaId) => {
+          onOpenIdea={(campusId, ideaId) => {
+            if (campusId !== state.campus.id) actions.openAccount(campusId);
             actions.openIdea(ideaId);
             setSurface("story");
           }}

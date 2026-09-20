@@ -8,7 +8,7 @@ import {
   record,
   schedule,
 } from "@box-campus/engine";
-import { emptyShelf, placeCampus } from "./place-campus";
+import { absorbFeed, emptyShelf, placeCampus } from "./place-campus";
 
 const now = 1_700_000_000_000;
 
@@ -57,4 +57,27 @@ test("updating the open story keeps the current card", () => {
   const active = parseState(placed.sessionText, BOX_CAMPUS_SAMPLE, now);
   assert.equal(active.state.campus.title, "고친 제목");
   assert.equal(active.state.session.kind === "feed" ? active.state.session.feed.current.cardId : "", cardId);
+});
+
+test("stories from any shelf show up together and local saves stay", () => {
+  const first = placeCampus({
+    sessionText: null,
+    library: emptyShelf(),
+    raw: BOX_CAMPUS_SAMPLE,
+    now,
+  });
+  const other = structuredClone(BOX_CAMPUS_SAMPLE) as { id: string; title: string };
+  other.id = "other-story";
+  other.title = "다른 스토리";
+  const second = placeCampus({
+    sessionText: null,
+    library: emptyShelf(),
+    raw: other,
+    now,
+  });
+  const merged = absorbFeed({ ...first.library, saved: ["kept-card"] }, second.library, now);
+  assert.deepEqual(merged.order, [first.id, "other-story"]);
+  assert.deepEqual(merged.saved, ["kept-card"]);
+  const again = absorbFeed(merged, second.library, now);
+  assert.equal(again.shelves["other-story"], merged.shelves["other-story"]);
 });

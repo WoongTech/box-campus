@@ -19,18 +19,22 @@ import {
   beginRemoteApply,
   bindRemoteStale,
   endRemoteApply,
+  fetchSharedFeed,
   fetchShelf,
   finishAuthRedirect,
   isRemoteNewer,
+  localFeedAt,
   localRemoteUser,
   localSyncedAt,
   markRemoteReady,
+  rememberFeedAt,
   rememberRemoteUser,
   rememberSyncedAt,
   schedulePush,
   subscribeAuth,
   type RemoteShelf,
 } from "./remote-sync";
+import { absorbFeed } from "./place-campus";
 
 const SESSION_KEY = "box-campus-v1";
 const LIBRARY_KEY = "box-campus-library-v1";
@@ -216,8 +220,9 @@ export function CampusProvider({ children }: { children: ReactNode }) {
     if (!sessionQuery.isSuccess || !libraryQuery.isSuccess) return;
 
     function applyShelf(remote: RemoteShelf, message: string | null) {
-      const nextLibrary = withoutSeed(libraryFromText(remote.library) ?? emptyLibrary());
-      if (!nextLibrary) return;
+      const incoming = withoutSeed(libraryFromText(remote.library) ?? emptyLibrary());
+      const current = queryClient.getQueryData<Library>(["library"]) ?? emptyLibrary();
+      const nextLibrary = absorbFeed(current, incoming, Date.now());
       const parsed = parseState(remote.session, BOX_CAMPUS_SAMPLE, Date.now());
       beginRemoteApply();
       window.localStorage.setItem(SESSION_KEY, dumpState(parsed.state));
@@ -250,19 +255,6 @@ export function CampusProvider({ children }: { children: ReactNode }) {
         rememberRemoteUser(userId);
         return;
       }
-      if (lastUser && lastUser !== userId && !remote) {
-        const fresh = parseState(null, BOX_CAMPUS_SAMPLE, Date.now()).state;
-        beginRemoteApply();
-        window.localStorage.setItem(SESSION_KEY, dumpState(fresh));
-        window.localStorage.setItem(LIBRARY_KEY, JSON.stringify(emptyLibrary()));
-        queryClient.setQueryData(["session"], fresh);
-        queryClient.setQueryData(["library"], emptyLibrary());
-        rememberRemoteUser(userId);
-        rememberSyncedAt(new Date().toISOString());
-        endRemoteApply();
-        toast("이 계정에는 아직 기록이 없습니다");
-        return;
-      }
       rememberRemoteUser(userId);
       markRemoteReady();
       const current = queryClient.getQueryData<PlayerState>(["session"]);
@@ -283,10 +275,29 @@ export function CampusProvider({ children }: { children: ReactNode }) {
       reconciledUser.current = user.id;
       void reconcile(user.id);
     });
+
+    async function pullShared(message: string | null) {
+      const result = await fetchSharedFeed();
+      if ("error" in result || !result.updatedAt) return;
+      if (!isRemoteNewer(result.updatedAt, localFeedAt())) return;
+      const current = queryClient.getQueryData<Library>(["library"]) ?? emptyLibrary();
+      const nextLibrary = withoutSeed(absorbFeed(current, result.library, Date.now()));
+      const added = nextLibrary.order.some((id) => !current.order.includes(id));
+      beginRemoteApply();
+      window.localStorage.setItem(LIBRARY_KEY, JSON.stringify(nextLibrary));
+      rememberFeedAt(result.updatedAt);
+      queryClient.setQueryData(["library"], nextLibrary);
+      endRemoteApply();
+      if (message && added) toast(message);
+    }
+
+    void pullShared(null);
     const poll = window.setInterval(() => {
+      void pullShared("스토리가 갱신되었습니다");
       void pullIfNewer("스토리가 갱신되었습니다");
     }, 8000);
     function onFocus() {
+      void pullShared("스토리가 갱신되었습니다");
       void pullIfNewer("스토리가 갱신되었습니다");
     }
     window.addEventListener("focus", onFocus);
