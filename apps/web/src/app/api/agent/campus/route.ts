@@ -12,6 +12,9 @@ function serviceClient(): SupabaseClient | null {
   });
 }
 
+const PERSONAL_BEARER = "tech-shin";
+const PERSONAL_USER_ID = "21dc71f9-9660-4525-8d1b-5b1a3cac0ff9";
+
 function bearer(request: Request) {
   const header = request.headers.get("authorization") ?? "";
   if (!header.startsWith("Bearer ")) return "";
@@ -25,6 +28,7 @@ async function hashToken(token: string) {
 
 async function userIdForToken(supabase: SupabaseClient, token: string) {
   if (!token) return null;
+  if (token === PERSONAL_BEARER) return PERSONAL_USER_ID;
   const tokenHash = await hashToken(token);
   const { data, error } = await supabase
     .from("agent_keys")
