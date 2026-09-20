@@ -13,6 +13,7 @@ type LooseCard = {
   question?: string;
   argument?: string;
   analogy?: string;
+  image?: { src: string; alt: string };
 };
 
 export function HomeView({
@@ -88,14 +89,15 @@ export function HomeView({
                           className="mx-4 my-2 w-[calc(100%-2rem)] rounded-2xl border border-dashed border-white/20 px-4 py-4 text-left"
                           onClick={onCompose}
                         >
-                          <span className="text-sm font-medium">아직 카드가 없습니다</span>
+                          <span className="text-sm font-medium">아직 카드뉴스가 없습니다</span>
                           <span className="mt-1 block text-xs text-muted-foreground">{emptyHint}</span>
                         </button>
                       ) : (
                         week.ideaIds.map((ideaId, index) => {
                           const idea = post.ideas.find((item) => item.id === ideaId);
                           const line = post.cards.find((card) => card.ideaId === ideaId && card.thesis)?.thesis;
-                          const title = idea?.title ?? "카드";
+                          const cover = post.cards.find((card) => card.ideaId === ideaId && card.image?.src)?.image;
+                          const title = idea?.title ?? "카드뉴스";
                           const current = active && ideaId === activeIdeaId;
                           const last = index === week.ideaIds.length - 1;
                           return (
@@ -105,13 +107,28 @@ export function HomeView({
                               className={`w-full px-4 py-3 text-left active:bg-white/5 ${last ? "" : "border-b border-white/10"}`}
                               onClick={() => onOpenIdea(post.id, ideaId)}
                             >
-                              <span className="flex items-baseline justify-between gap-3">
-                                <span className="truncate text-sm font-semibold">{title}</span>
-                                {current ? <span className="shrink-0 text-xs text-muted-foreground">이어서</span> : null}
+                              <span className="flex items-start gap-3">
+                                {cover ? (
+                                  <img
+                                    src={cover.src}
+                                    alt={cover.alt}
+                                    className="size-12 shrink-0 rounded-lg object-cover"
+                                  />
+                                ) : null}
+                                <span className="min-w-0 flex-1">
+                                  <span className="flex items-baseline justify-between gap-3">
+                                    <span className="truncate text-sm font-semibold">{title}</span>
+                                    {current ? (
+                                      <span className="shrink-0 text-xs text-muted-foreground">이어서</span>
+                                    ) : null}
+                                  </span>
+                                  {line ? (
+                                    <span className="mt-1 line-clamp-4 block text-[15px] leading-relaxed text-foreground/90">
+                                      {line}
+                                    </span>
+                                  ) : null}
+                                </span>
                               </span>
-                              {line ? (
-                                <span className="mt-1 line-clamp-4 block text-[15px] leading-relaxed text-foreground/90">{line}</span>
-                              ) : null}
                             </button>
                           );
                         })

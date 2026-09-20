@@ -19,7 +19,7 @@ import {
   beginRemoteApply,
   bindRemoteStale,
   endRemoteApply,
-  fetchSharedFeed,
+  fetchSharedShelf,
   fetchShelf,
   finishAuthRedirect,
   isRemoteNewer,
@@ -34,7 +34,7 @@ import {
   subscribeAuth,
   type RemoteShelf,
 } from "./remote-sync";
-import { absorbFeed } from "./place-campus";
+import { absorbShelf } from "./place-campus";
 
 const SESSION_KEY = "box-campus-v1";
 const LIBRARY_KEY = "box-campus-library-v1";
@@ -222,7 +222,7 @@ export function CampusProvider({ children }: { children: ReactNode }) {
     function applyShelf(remote: RemoteShelf, message: string | null) {
       const incoming = withoutSeed(libraryFromText(remote.library) ?? emptyLibrary());
       const current = queryClient.getQueryData<Library>(["library"]) ?? emptyLibrary();
-      const nextLibrary = absorbFeed(current, incoming, Date.now());
+      const nextLibrary = absorbShelf(current, incoming, Date.now());
       const parsed = parseState(remote.session, BOX_CAMPUS_SAMPLE, Date.now());
       beginRemoteApply();
       window.localStorage.setItem(SESSION_KEY, dumpState(parsed.state));
@@ -277,11 +277,11 @@ export function CampusProvider({ children }: { children: ReactNode }) {
     });
 
     async function pullShared(message: string | null) {
-      const result = await fetchSharedFeed();
+      const result = await fetchSharedShelf();
       if ("error" in result || !result.updatedAt) return;
       if (!isRemoteNewer(result.updatedAt, localFeedAt())) return;
       const current = queryClient.getQueryData<Library>(["library"]) ?? emptyLibrary();
-      const nextLibrary = withoutSeed(absorbFeed(current, result.library, Date.now()));
+      const nextLibrary = withoutSeed(absorbShelf(current, result.library, Date.now()));
       const added = nextLibrary.order.some((id) => !current.order.includes(id));
       beginRemoteApply();
       window.localStorage.setItem(LIBRARY_KEY, JSON.stringify(nextLibrary));

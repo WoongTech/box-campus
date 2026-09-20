@@ -8,7 +8,7 @@ import {
   record,
   schedule,
 } from "@box-campus/engine";
-import { absorbFeed, emptyShelf, placeCampus } from "./place-campus";
+import { absorbShelf, emptyShelf, placeCampus } from "./place-campus";
 
 const now = 1_700_000_000_000;
 
@@ -75,9 +75,9 @@ test("stories from any shelf show up together and local saves stay", () => {
     raw: other,
     now,
   });
-  const merged = absorbFeed({ ...first.library, saved: ["kept-card"] }, second.library, now);
+  const merged = absorbShelf({ ...first.library, saved: ["kept-card"] }, second.library, now);
   assert.deepEqual(merged.order, [first.id, "other-story"]);
   assert.deepEqual(merged.saved, ["kept-card"]);
-  const again = absorbFeed(merged, second.library, now);
+  const again = absorbShelf(merged, second.library, now);
   assert.equal(again.shelves["other-story"], merged.shelves["other-story"]);
 });

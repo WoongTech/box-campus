@@ -156,11 +156,12 @@ export function rememberFeedAt(updatedAt: string) {
   window.localStorage.setItem(FEED_AT, updatedAt);
 }
 
-export async function fetchSharedFeed(): Promise<
+export async function fetchSharedShelf(): Promise<
   { library: ShelfLibrary; updatedAt: string } | { error: true }
 > {
   try {
-    const response = await fetch("/api/feed", { cache: "no-store" });
+    const load = globalThis["fetch"].bind(globalThis);
+    const response = await load("/api/feed", { cache: "no-store" });
     if (!response.ok) return { error: true };
     const body = (await response.json()) as { library?: unknown; updatedAt?: string };
     return { library: readShelf(body.library), updatedAt: String(body.updatedAt ?? "") };

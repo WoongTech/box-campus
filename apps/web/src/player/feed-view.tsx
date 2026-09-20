@@ -18,7 +18,6 @@ export function FeedView({ onClose }: { onClose: () => void }) {
   const split = splitBlocks(view.blocks);
   const hasChoices = view.control.kind === "choices";
   const hasText = view.control.kind === "text";
-  const canTapAdvance = view.control.kind === "advance";
   const feed = state.session.kind === "feed" ? state.session.feed : null;
   const ideaTitle = feed ? state.campus.ideas.find((idea) => idea.id === feed.ideaId)?.title ?? "" : "";
   const contextEyebrows = split.meta.filter(
@@ -26,14 +25,14 @@ export function FeedView({ onClose }: { onClose: () => void }) {
   );
   const showMetaInStrip =
     !hasChoices && split.meta.length > 0 && view.role !== "advisor";
-  const subtitle = [ideaTitle, view.dayCount > 0 ? `오늘 ${view.dayCount}` : ""].filter(Boolean).join(" · ");
+  const subtitle = ideaTitle;
   const showDock =
     hasChoices ||
     hasText ||
     view.role === "advisor" ||
-    view.role === "hub" ||
-    (canTapAdvance && view.role === "day-close");
-  const centered = !hasText;
+    view.role === "hub";
+  const hasSlideImage = split.images.length > 0;
+  const centered = !hasText && !hasSlideImage;
 
   return (
     <section className="relative flex h-full min-h-0 flex-col">
@@ -109,60 +108,74 @@ export function FeedView({ onClose }: { onClose: () => void }) {
       >
         <div
           className={
-            hasText
-              ? "flex min-h-0 flex-1 flex-col justify-end gap-3"
-              : "flex min-h-0 flex-1 flex-col justify-center gap-4 text-center"
+            hasSlideImage
+              ? "flex min-h-0 flex-1 flex-col gap-3"
+              : hasText
+                ? "flex min-h-0 flex-1 flex-col justify-end gap-3"
+                : "flex min-h-0 flex-1 flex-col justify-center gap-4 text-center"
           }
         >
-          {view.role === "advisor"
-            ? split.meta
-                .filter((block) => block.kind === "eyebrow")
-                .map((block, index) => (
-                  <p key={`step-${index}`} className="text-xs font-medium text-muted-foreground">
+          {hasSlideImage
+            ? split.images.map((block) => (
+                <img
+                  key={block.src}
+                  src={block.src}
+                  alt={block.alt}
+                  className="w-full max-h-[min(52vh,28rem)] shrink-0 rounded-2xl object-cover"
+                />
+              ))
+            : null}
+          <div
+            className={
+              hasSlideImage
+                ? "mt-auto space-y-2 text-left"
+                : hasText
+                  ? "space-y-2"
+                  : "space-y-4"
+            }
+          >
+            {view.role === "advisor"
+              ? split.meta
+                  .filter((block) => block.kind === "eyebrow")
+                  .map((block, index) => (
+                    <p key={`step-${index}`} className="text-xs font-medium text-muted-foreground">
+                      {block.text}
+                    </p>
+                  ))
+              : contextEyebrows.map((block, index) => (
+                  <p key={`prompt-${index}`} className="text-sm font-medium text-foreground">
                     {block.text}
                   </p>
-                ))
-            : contextEyebrows.map((block, index) => (
-                <p key={`prompt-${index}`} className="text-sm font-medium text-foreground">
-                  {block.text}
-                </p>
-              ))}
-          {split.images.map((block) => (
-            <img
-              key={block.src}
-              src={block.src}
-              alt={block.alt}
-              className="mx-auto max-h-64 w-full max-w-[22rem] rounded-2xl object-contain"
-            />
-          ))}
-          {split.hero ? (
-            <Hero block={split.hero} centered={centered} />
-          ) : (
-            <h1 className="text-2xl leading-snug font-semibold tracking-tight text-balance">
-              {state.campus.title}
-            </h1>
-          )}
-          {split.verdict ? (
-            <p
-              className={
-                split.verdict.tone === "retry"
-                  ? "text-sm font-medium text-destructive"
-                  : "text-sm font-medium text-foreground"
-              }
-            >
-              {split.verdict.text}
-            </p>
-          ) : null}
-          {split.reading.map((block, index) => (
-            <ReadingLine key={`${block.kind}-${index}`} block={block} centered={centered} />
-          ))}
-          {showMetaInStrip
-            ? split.meta
-                .filter((block) => block.kind !== "eyebrow")
-                .map((block, index) => (
-                  <MetaLine key={`${block.kind}-${index}`} block={block} centered={centered} />
-                ))
-            : null}
+                ))}
+            {split.hero ? (
+              <Hero block={split.hero} centered={centered} caption={hasSlideImage} />
+            ) : (
+              <h1 className="text-2xl leading-snug font-semibold tracking-tight text-balance">
+                {state.campus.title}
+              </h1>
+            )}
+            {split.verdict ? (
+              <p
+                className={
+                  split.verdict.tone === "retry"
+                    ? "text-sm font-medium text-destructive"
+                    : "text-sm font-medium text-foreground"
+                }
+              >
+                {split.verdict.text}
+              </p>
+            ) : null}
+            {split.reading.map((block, index) => (
+              <ReadingLine key={`${block.kind}-${index}`} block={block} centered={centered} />
+            ))}
+            {showMetaInStrip
+              ? split.meta
+                  .filter((block) => block.kind !== "eyebrow")
+                  .map((block, index) => (
+                    <MetaLine key={`${block.kind}-${index}`} block={block} centered={centered} />
+                  ))
+              : null}
+          </div>
         </div>
       </div>
 
@@ -220,19 +233,24 @@ export function FeedView({ onClose }: { onClose: () => void }) {
             홈
           </Button>
         ) : null}
-
-        {canTapAdvance && view.role === "day-close" ? (
-          <p className="text-center text-xs text-muted-foreground">오늘은 여기까지입니다. 내일 이어서 봅니다.</p>
-        ) : null}
       </div>
       ) : null}
     </section>
   );
 }
 
-function Hero({ block, centered }: { block: Extract<Block, { text: string }>; centered: boolean }) {
-  const reading =
-    block.text.length > 120
+function Hero({
+  block,
+  centered,
+  caption = false,
+}: {
+  block: Extract<Block, { text: string }>;
+  centered: boolean;
+  caption?: boolean;
+}) {
+  const reading = caption
+    ? "text-base leading-relaxed"
+    : block.text.length > 120
       ? "text-lg leading-relaxed"
       : block.text.length > 80
         ? "text-xl leading-relaxed"

@@ -84,7 +84,7 @@ function campusSignature(raw: string | undefined) {
   }
 }
 
-export function absorbFeed(local: ShelfLibrary, incoming: ShelfLibrary, now: number): ShelfLibrary {
+export function absorbShelf(local: ShelfLibrary, incoming: ShelfLibrary, now: number): ShelfLibrary {
   const shelves = { ...local.shelves };
   const order = [...local.order];
   const seen = new Set<string>();

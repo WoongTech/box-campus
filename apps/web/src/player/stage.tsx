@@ -62,7 +62,6 @@ export function Stage() {
       setSurface("home");
       return;
     }
-    if (cardRole === "day-close") return;
     actions.advance();
   }
 

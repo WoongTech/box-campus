@@ -49,7 +49,7 @@ export function StripView() {
           className="min-h-11 w-full"
           onClick={() => actions.dispatch({ kind: "close-strip", transitionId: frame.transitionId })}
         >
-          피드로
+          이어보기
         </Button>
       </div>
     </div>

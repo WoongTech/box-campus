@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { absorbFeed, emptyShelf, readShelf } from "@/player/place-campus";
+import { absorbShelf, emptyShelf, readShelf } from "@/player/place-campus";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +27,7 @@ export async function GET() {
   let library = emptyShelf();
   let updatedAt = "";
   for (const row of data ?? []) {
-    library = absorbFeed(library, readShelf(row.library), Date.now());
+    library = absorbShelf(library, readShelf(row.library), Date.now());
     const at = row.updated_at ? String(row.updated_at) : "";
     if (at > updatedAt) updatedAt = at;
   }
