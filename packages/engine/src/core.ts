@@ -277,12 +277,44 @@ function parseCampus(raw) {
     }
   }
 
-  for (var si = 0; si < SLOT_ROLES.length; si++) {
-    var roleNeeded = SLOT_ROLES[si];
-    var hasRole = cards.some(function (card) {
-      return card.role === roleNeeded;
-    });
-    if (!hasRole) throw "캠퍼스 묶음: " + roleNeeded + " 카드가 필요합니다.";
+  var listedWeekByIdea = {};
+  for (var listWeek = 0; listWeek < weeks.length; listWeek++) {
+    var listedWeek = weeks[listWeek];
+    for (var listed = 0; listed < listedWeek.ideaIds.length; listed++) {
+      var listedIdeaId = listedWeek.ideaIds[listed];
+      if (listedWeekByIdea[listedIdeaId]) {
+        throw "캠퍼스 묶음: 아이디어가 여러 주차에 있습니다.";
+      }
+      listedWeekByIdea[listedIdeaId] = listedWeek.id;
+    }
+  }
+
+  for (var ideaRow = 0; ideaRow < ideas.length; ideaRow++) {
+    var ideaForCards = ideas[ideaRow];
+    if (listedWeekByIdea[ideaForCards.id] !== ideaForCards.weekId) {
+      throw "캠퍼스 묶음: 아이디어가 주차 목록에 없습니다.";
+    }
+    for (var roleRow = 0; roleRow < SLOT_ROLES.length; roleRow++) {
+      var roleNeeded = SLOT_ROLES[roleRow];
+      var roleCount = 0;
+      for (var cardRow = 0; cardRow < cards.length; cardRow++) {
+        if (
+          cards[cardRow].ideaId === ideaForCards.id &&
+          cards[cardRow].role === roleNeeded
+        ) {
+          roleCount += 1;
+        }
+      }
+      if (roleCount !== 1) {
+        throw (
+          "캠퍼스 묶음: 아이디어 " +
+          ideaForCards.id +
+          "에 " +
+          roleNeeded +
+          " 카드가 하나여야 합니다."
+        );
+      }
+    }
   }
 
   var loop = isObject(raw.loop) ? raw.loop : ONE_MORE_LOOP;

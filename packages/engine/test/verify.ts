@@ -383,3 +383,43 @@ test("one idea finishes before the next, then the feed can reopen it", () => {
     assert.equal(state.session.feed.hub, false);
   }
 });
+
+test("an idea without its four cards is rejected", () => {
+  const broken = structuredClone(BOX_CAMPUS_SAMPLE);
+  broken.cards = broken.cards.filter((card) => card.id !== "room-a");
+  assert.throws(
+    () => parseCampus(broken),
+    (error: unknown) =>
+      error === "캠퍼스 묶음: 아이디어 idea-a에 roommate 카드가 하나여야 합니다.",
+  );
+});
+
+test("the analogy is the roommate card, and the limit follows it", () => {
+  let state = createInitialState(BOX_CAMPUS_SAMPLE, FIXED_NOW);
+  state = { ...state, progress: { ...state.progress, dailyGoal: 40 } };
+  let frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  while (frame.view.role !== "roommate") {
+    if (frame.view.control.kind === "choices") {
+      state = record(
+        state,
+        {
+          kind: "activate",
+          transitionId: frame.transitionId,
+          actionId: correctChoice(state, frame.view.control.options),
+        },
+        FIXED_NOW,
+      );
+    } else {
+      state = record(state, { kind: "advance", transitionId: frame.transitionId }, FIXED_NOW);
+    }
+    frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  }
+  const title = frame.view.blocks.find((block) => block.kind === "title");
+  const bodies = frame.view.blocks.filter((block) => block.kind === "body").map((block) => block.text);
+  assert.equal(title?.text, "같은 익힘은 불 세기 곱하기 시간이다. 불을 올리면 시간을 줄인다.");
+  assert.deepEqual(bodies, ["음식은 타고 사진은 밝은 곳이 날아간다."]);
+  assert.equal(
+    frame.view.blocks.some((block) => block.kind === "eyebrow" && block.text === "요리"),
+    true,
+  );
+});
