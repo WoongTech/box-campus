@@ -1,0 +1,287 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #0d0f12;
+  color: #f2f4f8;
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app,
+#stage {
+  min-height: 100%;
+  min-height: 100dvh;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+}
+
+#stage {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.25rem 0.25rem;
+  font-size: 0.85rem;
+  color: #9aa3b2;
+}
+
+
+.card-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 1.25rem 6.5rem;
+  max-width: 32rem;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-size: 1.35rem;
+  line-height: 1.55;
+}
+
+.card-body .eyebrow {
+  font-size: 1rem;
+  color: #94a3b8;
+}
+
+.card-body .title {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.card-body .source {
+  font-size: 0.95rem;
+  color: #64748b;
+  border-left: 3px solid #334155;
+  padding-left: 0.75rem;
+}
+
+.card-body .badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid #fbbf24;
+  color: #fbbf24;
+  border-radius: 0.25rem;
+  width: fit-content;
+}
+
+.card-body .verdict.good {
+  color: #6ee7b7;
+  font-weight: 600;
+}
+
+.card-body .verdict.retry {
+  color: #fca5a5;
+  font-weight: 600;
+}
+
+.thumb-zone {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1rem 1.25rem calc(1rem + env(safe-area-inset-bottom));
+  background: linear-gradient(transparent, #0d0f12 35%);
+}
+
+.thumb-zone button,
+.choice-grid button {
+  font: inherit;
+  cursor: pointer;
+  border: none;
+  border-radius: 0.75rem;
+}
+
+.primary-btn {
+  width: 100%;
+  max-width: 32rem;
+  margin: 0 auto;
+  display: block;
+  padding: 1rem 1.25rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  background: #38bdf8;
+  color: #0c1220;
+}
+
+.choice-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-width: 32rem;
+  margin: 0 auto;
+}
+
+.choice-grid button {
+  padding: 0.9rem 1rem;
+  text-align: left;
+  background: #1a2230;
+  color: #f8fafc;
+  font-size: 1.05rem;
+}
+
+.text-step {
+  max-width: 32rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.text-step input {
+  font: inherit;
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #334155;
+  background: #111827;
+  color: #f8fafc;
+  font-size: 1.05rem;
+}
+
+.strip-view {
+  padding: 1rem 1.25rem 5rem;
+  max-width: 32rem;
+  margin: 0 auto;
+}
+
+.strip-view h1 {
+  font-size: 1.4rem;
+  margin: 0 0 1rem;
+}
+
+.week-row {
+  border: 1px solid #1f2937;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  background: #111827;
+}
+
+.week-row.locked {
+  opacity: 0.55;
+}
+
+.week-row h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.1rem;
+}
+
+.week-row p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
+.week-row .empty {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.panel-toggle {
+  position: fixed;
+  top: 0.75rem;
+  right: 1rem;
+  z-index: 2;
+  background: #1f2937;
+  color: #e2e8f0;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.import-panel {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 5;
+  padding: 1rem;
+  overflow: auto;
+}
+
+.import-panel.open {
+  display: flex;
+  align-items: flex-end;
+}
+
+.import-panel-inner {
+  background: #111827;
+  border-radius: 1rem 1rem 0 0;
+  padding: 1.25rem;
+  width: 100%;
+  max-width: 32rem;
+  margin: 0 auto;
+}
+
+.import-panel textarea {
+  width: 100%;
+  min-height: 8rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+  background: #0f172a;
+  color: #e2e8f0;
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+}
+
+.import-panel .row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.notice {
+  background: #422006;
+  color: #fde68a;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.brief-bar {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #0f172a;
+  border-bottom: 1px solid #1e293b;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.brief-bar button {
+  font: inherit;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.5rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #e2e8f0;
+  cursor: pointer;
+  white-space: nowrap;
+}
