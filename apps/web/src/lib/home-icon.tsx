@@ -18,7 +18,7 @@ export function homeIcon(size: number) {
           justifyContent: "center",
         }}
       >
-        <AlterMarkSvg word={["a", "l"]} fill={ink} height={mark} />
+        <AlterMarkSvg word={["a"]} fill={ink} height={mark} />
       </div>
     ),
     { width: size, height: size },
