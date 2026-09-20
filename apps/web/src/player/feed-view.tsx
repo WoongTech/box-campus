@@ -6,7 +6,7 @@ import { AppIcon, phoneIconSize } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { BOX_CAMPUS_SAMPLE, type Block } from "@box-campus/engine";
+import type { Block } from "@box-campus/engine";
 import { useCampus } from "./campus-provider";
 import { useFieldFocusLock } from "./interaction-lock";
 import { splitBlocks } from "./split-blocks";
@@ -19,12 +19,13 @@ export function FeedView({ onClose }: { onClose: () => void }) {
   const hasChoices = view.control.kind === "choices";
   const hasText = view.control.kind === "text";
   const canTapAdvance = view.control.kind === "advance";
-  const eyebrows = split.meta.filter((block) => block.kind === "eyebrow");
-  const promptEyebrows = eyebrows.slice(1);
+  const feed = state.session.kind === "feed" ? state.session.feed : null;
+  const ideaTitle = feed ? state.campus.ideas.find((idea) => idea.id === feed.ideaId)?.title ?? "" : "";
+  const contextEyebrows = split.meta.filter(
+    (block) => block.kind === "eyebrow" && block.text !== ideaTitle,
+  );
   const showMetaInStrip =
     !hasChoices && split.meta.length > 0 && view.role !== "advisor";
-  const feed = state.session.kind === "feed" ? state.session.feed : null;
-  const ideaTitle = feed ? state.campus.ideas.find((idea) => idea.id === feed.ideaId)?.title : "";
   const subtitle = [ideaTitle, view.dayCount > 0 ? `오늘 ${view.dayCount}` : ""].filter(Boolean).join(" · ");
   const showDock =
     hasChoices ||
@@ -121,17 +122,11 @@ export function FeedView({ onClose }: { onClose: () => void }) {
                     {block.text}
                   </p>
                 ))
-            : null}
-          {hasChoices
-            ? promptEyebrows.map((block, index) => (
-                <p
-                  key={`prompt-${index}`}
-                  className="text-sm font-medium text-foreground"
-                >
+            : contextEyebrows.map((block, index) => (
+                <p key={`prompt-${index}`} className="text-sm font-medium text-foreground">
                   {block.text}
                 </p>
-              ))
-            : null}
+              ))}
           {split.hero ? (
             <Hero block={split.hero} centered={centered} />
           ) : (
@@ -154,9 +149,11 @@ export function FeedView({ onClose }: { onClose: () => void }) {
             <ReadingLine key={`${block.kind}-${index}`} block={block} centered={centered} />
           ))}
           {showMetaInStrip
-            ? split.meta.map((block, index) => (
-                <MetaLine key={`${block.kind}-${index}`} block={block} centered={centered} />
-              ))
+            ? split.meta
+                .filter((block) => block.kind !== "eyebrow")
+                .map((block, index) => (
+                  <MetaLine key={`${block.kind}-${index}`} block={block} centered={centered} />
+                ))
             : null}
         </div>
       </div>
@@ -173,13 +170,12 @@ export function FeedView({ onClose }: { onClose: () => void }) {
                 key={option.actionId}
                 type="button"
                 variant="secondary"
-                className="h-auto min-h-12 w-full justify-center rounded-full px-4 py-3 text-center text-[15px] leading-snug whitespace-normal"
+                className="h-auto min-h-12 w-full justify-start rounded-full px-4 py-3 text-left text-[15px] leading-snug whitespace-normal"
                 onClick={() =>
                   actions.dispatch({
                     kind: "activate",
                     transitionId: frame.transitionId,
                     actionId: option.actionId,
-                    raw: option.actionId.includes("hub-2") ? BOX_CAMPUS_SAMPLE : undefined,
                   })
                 }
               >
@@ -255,10 +251,20 @@ function ReadingLine({ block, centered }: { block: Block; centered: boolean }) {
 }
 
 function MetaLine({ block, centered }: { block: Block; centered: boolean }) {
-  const className =
-    block.kind === "source" || block.kind === "badge"
-      ? `text-sm text-muted-foreground ${centered ? "mx-auto max-w-[22rem]" : ""}`
-      : `text-xs uppercase tracking-wide text-muted-foreground ${centered ? "mx-auto max-w-[22rem]" : ""}`;
+  const className = `text-sm text-muted-foreground ${centered ? "mx-auto max-w-[22rem]" : ""}`;
+  if (block.kind === "source" && block.href) {
+    return (
+      <a
+        href={block.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`${className} underline underline-offset-2`}
+        onClick={(event) => event.stopPropagation()}
+      >
+        {block.text}
+      </a>
+    );
+  }
   return <p className={className}>{block.text}</p>;
 }
 

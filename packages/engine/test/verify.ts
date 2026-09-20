@@ -166,6 +166,7 @@ test("a wrong check keeps the explanation primary on reveal", () => {
   }
   const wrong = frame.view.control.options.find((option) => option.label.includes("두 배로"));
   assert.ok(wrong);
+  const questionLine = frame.view.blocks.find((block) => block.kind === "title")?.text ?? "";
   state = record(
     state,
     { kind: "activate", transitionId: frame.transitionId, actionId: wrong.actionId },
@@ -174,7 +175,20 @@ test("a wrong check keeps the explanation primary on reveal", () => {
   frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
   const title = frame.view.blocks.find((block) => block.kind === "title");
   assert.ok(title?.text.includes("반이"));
-  assert.ok(frame.view.blocks.some((block) => block.kind === "body" && block.text.startsWith("질문:")));
+  assert.ok(
+    frame.view.blocks.some(
+      (block) => block.kind === "body" && block.text === questionLine,
+    ),
+  );
+  assert.equal(
+    frame.view.blocks.some((block) => block.kind === "body" && block.text.startsWith("질문:")),
+    false,
+  );
+  assert.ok(
+    frame.view.blocks.some(
+      (block) => block.kind === "body" && block.text === wrong.label,
+    ),
+  );
 });
 
 test("advisor rhythm installs a daily goal that pauses the feed", () => {
@@ -239,12 +253,19 @@ test("editor after a check carries the last explanation forward", () => {
     FIXED_NOW,
   );
   frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  const bridgeHint = frame.view.blocks.find((block) => block.kind === "title")?.text ?? "";
   state = record(state, { kind: "advance", transitionId: frame.transitionId }, FIXED_NOW);
   frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
   assert.ok(
     frame.view.blocks.some(
+      (block) => block.kind === "body" && block.text === bridgeHint,
+    ),
+  );
+  assert.equal(
+    frame.view.blocks.some(
       (block) => block.kind === "body" && block.text.startsWith("방금 정리:"),
     ),
+    false,
   );
   assert.ok(
     frame.view.blocks.some(

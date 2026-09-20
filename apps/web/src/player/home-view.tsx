@@ -71,6 +71,9 @@ export function HomeView({
             <h2 className="px-4 pt-5 pb-1 text-xs font-medium text-muted-foreground">
               {week.number}주 · {week.title}
             </h2>
+            {week.promise.trim() ? (
+              <p className="px-4 pb-1 text-sm text-muted-foreground">{week.promise}</p>
+            ) : null}
             {week.ideaIds.length === 0 ? (
               <button
                 type="button"

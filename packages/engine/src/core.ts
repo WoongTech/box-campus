@@ -651,9 +651,9 @@ function projectCardView(state, encounter) {
       blocks.push({ kind: "title", text: card.reveal });
       var picked = card.choices[encounter.selectedIndex];
       if (encounter.verdict !== "correct" && picked) {
-        blocks.push({ kind: "body", text: "내가 고른 답: " + picked.label });
+        blocks.push({ kind: "body", text: picked.label });
       }
-      blocks.push({ kind: "body", text: "질문: " + card.question });
+      blocks.push({ kind: "body", text: card.question });
       control = { kind: "advance", label: "다음" };
     }
   } else if (card.role === "editor") {
@@ -664,11 +664,11 @@ function projectCardView(state, encounter) {
     ) {
       blocks.push({
         kind: "body",
-        text: "방금 정리: " + state.session.feed.bridgeHint,
+        text: state.session.feed.bridgeHint,
       });
     }
     blocks.push({ kind: "title", text: card.argument });
-    blocks.push({ kind: "body", text: "구멍: " + card.holeLabel });
+    blocks.push({ kind: "body", text: card.holeLabel });
     if (encounter.phase === "hole") {
       control = {
         kind: "choices",
@@ -681,7 +681,7 @@ function projectCardView(state, encounter) {
       blocks.push({
         kind: "verdict",
         tone: encounter.verdict === "closed" ? "good" : "retry",
-        text: encounter.verdict === "closed" ? "구멍을 막았습니다" : "아직 열려 있습니다",
+        text: encounter.verdict === "closed" ? "맞았습니다" : "다시 볼게요",
       });
       if (patch && patch.explanation) {
         blocks.push({ kind: "body", text: patch.explanation });
@@ -689,9 +689,9 @@ function projectCardView(state, encounter) {
       control = { kind: "advance", label: "다음" };
     }
   } else if (card.role === "roommate") {
-    blocks.push({ kind: "body", text: card.foreignField + " 비유" });
-    blocks.push({ kind: "body", text: card.analogy });
-    blocks.push({ kind: "body", text: "한계: " + card.analogyLimit });
+    blocks.push({ kind: "eyebrow", text: card.foreignField });
+    blocks.push({ kind: "title", text: card.analogy });
+    blocks.push({ kind: "body", text: card.analogyLimit });
     control = { kind: "advance", label: "다음" };
   }
 
