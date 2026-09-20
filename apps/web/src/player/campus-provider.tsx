@@ -189,7 +189,16 @@ export function CampusProvider({ children }: { children: ReactNode }) {
     };
   }, [library, queryClient, state]);
 
-  if (!value) return <main className="min-h-dvh bg-background" />;
+  if (!value) {
+    return (
+      <main className="mx-auto flex min-h-dvh w-full max-w-[390px] flex-col items-center justify-center gap-3 bg-background px-6">
+        <div className="h-1 w-16 overflow-hidden rounded-full bg-muted">
+          <div className="h-full w-1/2 animate-pulse rounded-full bg-foreground/40" />
+        </div>
+        <p className="text-sm text-muted-foreground">학습 피드를 준비하는 중</p>
+      </main>
+    );
+  }
   return <CampusContext value={value}>{children}</CampusContext>;
 }
 

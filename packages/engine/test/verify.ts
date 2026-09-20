@@ -157,6 +157,97 @@ test("leaving the design questions returns to the same card", () => {
   assert.equal(state.session.kind, "feed");
 });
 
+test("a wrong check keeps the explanation primary on reveal", () => {
+  let state = createInitialState(BOX_CAMPUS_SAMPLE, FIXED_NOW);
+  let frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  while (frame.view.control.kind !== "choices" || !frame.view.blocks.some((b) => b.text.includes("셔터"))) {
+    state = record(state, { kind: "advance", transitionId: frame.transitionId }, FIXED_NOW);
+    frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  }
+  const wrong = frame.view.control.options.find((option) => option.label.includes("두 배로"));
+  assert.ok(wrong);
+  state = record(
+    state,
+    { kind: "activate", transitionId: frame.transitionId, actionId: wrong.actionId },
+    FIXED_NOW,
+  );
+  frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  const title = frame.view.blocks.find((block) => block.kind === "title");
+  assert.ok(title?.text.includes("반이"));
+  assert.ok(frame.view.blocks.some((block) => block.kind === "body" && block.text.startsWith("질문:")));
+});
+
+test("advisor rhythm installs a daily goal that pauses the feed", () => {
+  let state = createInitialState(BOX_CAMPUS_SAMPLE, FIXED_NOW);
+  state.progress.dailyGoal = 2;
+  state.progress.dayPulse.completed = 1;
+  let frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  state = record(state, { kind: "advance", transitionId: frame.transitionId }, FIXED_NOW);
+  frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  assert.ok(frame.view.blocks.some((block) => block.kind === "title" && block.text === "오늘은 여기까지"));
+  assert.equal(state.session.kind, "feed");
+  if (state.session.kind === "feed") {
+    assert.equal(state.session.feed.dayClose, true);
+    assert.ok(state.session.feed.resumeFeed);
+  }
+});
+
+test("a new day resumes after the daily pause", () => {
+  let state = createInitialState(BOX_CAMPUS_SAMPLE, FIXED_NOW);
+  state.progress.dailyGoal = 1;
+  let frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  state = record(state, { kind: "advance", transitionId: frame.transitionId }, FIXED_NOW);
+  frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  assert.ok(frame.view.blocks.some((block) => block.text === "오늘은 여기까지"));
+  const nextDay = FIXED_NOW + 48 * 60 * 60 * 1000;
+  frame = cardFrame(schedule(state, nextDay, { kind: "resume" }));
+  assert.equal(frame.view.blocks.some((block) => block.text === "오늘은 여기까지"), false);
+  assert.equal(frame.view.dayCount, 0);
+});
+
+test("fifth advisor answer sets daily goal from rhythm choice", () => {
+  let state = createInitialState(BOX_CAMPUS_SAMPLE, FIXED_NOW);
+  state = record(state, { kind: "start-advisor" }, FIXED_NOW);
+  state = record(
+    state,
+    { kind: "submit-text", transitionId: state.transitionId, actionId: "adv-0", value: "테스트 주제" },
+    FIXED_NOW,
+  );
+  for (const actionId of ["adv-fl-0", "adv-bl-0", "adv-rh-1", "adv-ln-0"]) {
+    const frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+    state = record(
+      state,
+      { kind: "activate", transitionId: frame.transitionId, actionId },
+      FIXED_NOW,
+    );
+  }
+  assert.equal(state.progress.dailyGoal, 12);
+});
+
+test("editor after a check carries the last explanation forward", () => {
+  let state = createInitialState(BOX_CAMPUS_SAMPLE, FIXED_NOW);
+  let frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  while (frame.view.control.kind !== "choices" || !frame.view.blocks.some((b) => b.text.includes("셔터"))) {
+    state = record(state, { kind: "advance", transitionId: frame.transitionId }, FIXED_NOW);
+    frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  }
+  const correct = frame.view.control.options.find((option) => option.label.includes("반으로"));
+  assert.ok(correct);
+  state = record(
+    state,
+    { kind: "activate", transitionId: frame.transitionId, actionId: correct.actionId },
+    FIXED_NOW,
+  );
+  frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  state = record(state, { kind: "advance", transitionId: frame.transitionId }, FIXED_NOW);
+  frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  assert.ok(
+    frame.view.blocks.some(
+      (block) => block.kind === "body" && block.text.startsWith("방금 정리:"),
+    ),
+  );
+});
+
 test("dump and parse reload the first card without a notice", () => {
   const round: PlayerState = createInitialState(BOX_CAMPUS_SAMPLE, FIXED_NOW);
   const reloaded = parseState(dumpState(round), BOX_CAMPUS_SAMPLE, FIXED_NOW);

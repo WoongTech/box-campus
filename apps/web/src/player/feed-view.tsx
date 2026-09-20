@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { BookmarkIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -10,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { BOX_CAMPUS_SAMPLE, type Block } from "@box-campus/engine";
 import { useCampus } from "./campus-provider";
+import { useFieldFocusLock } from "./interaction-lock";
 import { splitBlocks } from "./split-blocks";
 
 export function FeedView({
@@ -22,71 +24,115 @@ export function FeedView({
   const view = frame.view;
   const split = splitBlocks(view.blocks);
   const initial = state.campus.title.trim().slice(0, 1);
+  const hasChoices = view.control.kind === "choices";
+  const hasText = view.control.kind === "text";
+  const canTapAdvance = view.control.kind === "advance";
+  const eyebrows = split.meta.filter((block) => block.kind === "eyebrow");
+  const dockEyebrow = eyebrows[0]?.text;
+  const promptEyebrows = eyebrows.slice(1);
+  const showMetaInStrip =
+    !hasChoices && split.meta.length > 0 && view.role !== "advisor";
 
   return (
     <section
       className="relative flex min-h-dvh flex-col"
       onClick={() => {
-        if (view.control.kind === "advance") actions.advance();
+        if (canTapAdvance) actions.advance();
       }}
     >
       {typeof view.pentadIndex === "number" ? (
-        <div className="absolute inset-x-3 top-[max(0.7rem,env(safe-area-inset-top))] z-10 flex gap-1">
+        <div
+          className="pointer-events-none absolute inset-x-3 top-[max(0.65rem,env(safe-area-inset-top))] z-10 flex gap-1"
+          aria-hidden
+        >
           {Array.from({ length: 4 }, (_, index) => (
-            <Progress key={index} value={index <= view.pentadIndex! ? 100 : 0} />
+            <Progress
+              key={index}
+              value={index <= view.pentadIndex! ? 100 : 0}
+              className="h-0.5 flex-1 bg-muted/40 [&>div]:bg-foreground"
+            />
           ))}
         </div>
       ) : null}
 
       <div
         key={frame.transitionId}
-        className="flex flex-1 animate-in flex-col justify-center px-5 pt-16 pb-6 fade-in slide-in-from-bottom-4 duration-300"
+        className={[
+          "flex min-h-0 flex-1 flex-col px-5 pt-[max(3.25rem,env(safe-area-inset-top)+2.5rem)]",
+          hasChoices || hasText ? "pb-3" : "pb-2",
+          "animate-in fade-in slide-in-from-bottom-3 duration-300",
+        ].join(" ")}
       >
-        {split.hero ? (
-          <Hero block={split.hero} />
-        ) : (
-          <h1 className="text-2xl leading-snug font-semibold tracking-tight text-balance">
-            {state.campus.title}
-          </h1>
-        )}
-        {split.verdict ? (
-          <p className={split.verdict.tone === "retry" ? "mt-3 text-sm text-destructive" : "mt-3 text-sm text-foreground"}>
-            {split.verdict.text}
-          </p>
-        ) : null}
+        <div
+          className={
+            hasChoices || hasText
+              ? "flex min-h-0 flex-1 flex-col justify-end gap-3"
+              : "flex min-h-0 flex-1 flex-col justify-center gap-4 text-center"
+          }
+        >
+          {hasChoices
+            ? promptEyebrows.map((block, index) => (
+                <p
+                  key={`prompt-${index}`}
+                  className="text-sm font-medium text-foreground"
+                >
+                  {block.text}
+                </p>
+              ))
+            : null}
+          {split.hero ? (
+            <Hero block={split.hero} centered={!hasChoices && !hasText} />
+          ) : (
+            <h1 className="text-2xl leading-snug font-semibold tracking-tight text-balance">
+              {state.campus.title}
+            </h1>
+          )}
+          {split.verdict ? (
+            <p
+              className={
+                split.verdict.tone === "retry"
+                  ? "text-sm font-medium text-destructive"
+                  : "text-sm font-medium text-foreground"
+              }
+            >
+              {split.verdict.text}
+            </p>
+          ) : null}
+          {split.reading.map((block, index) => (
+            <ReadingLine key={`${block.kind}-${index}`} block={block} centered={!hasChoices && !hasText} />
+          ))}
+          {showMetaInStrip
+            ? split.meta.map((block, index) => (
+                <MetaLine key={`${block.kind}-${index}`} block={block} centered={!hasChoices && !hasText} />
+              ))
+            : null}
+        </div>
       </div>
 
       <div
-        className="z-10 space-y-3 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+        className="z-10 shrink-0 space-y-3 border-t border-border/40 bg-background/90 px-4 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] backdrop-blur-sm supports-backdrop-filter:bg-background/75"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-end justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold tracking-tight">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1 pt-0.5">
+            <p className="truncate text-sm font-semibold tracking-tight">
               {state.campus.title}
               {view.dayCount > 0 ? (
-                <Badge variant="secondary" className="ml-2 align-middle">
+                <Badge variant="secondary" className="ml-2 align-middle text-[11px]">
                   오늘 {view.dayCount}
                 </Badge>
               ) : null}
             </p>
-            {split.caption.map((block, index) => (
-              <p
-                key={`${block.kind}-${index}`}
-                className={
-                  block.kind === "source" || block.kind === "badge"
-                    ? "mt-1 line-clamp-3 text-sm text-muted-foreground"
-                    : "mt-1 line-clamp-4 text-sm leading-5"
-                }
-              >
-                {block.text}
+            {hasChoices && dockEyebrow ? (
+              <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                {dockEyebrow}
               </p>
-            ))}
+            ) : null}
             {state.authorBrief ? (
               <Button
                 type="button"
                 variant="link"
-                className="h-auto px-0 text-muted-foreground"
+                className="mt-1 h-auto px-0 text-xs text-muted-foreground"
                 onClick={() => {
                   const brief = state.authorBrief;
                   if (!brief || !navigator.clipboard?.writeText) {
@@ -103,7 +149,7 @@ export function FeedView({
               </Button>
             ) : null}
           </div>
-          <div className="flex shrink-0 flex-col items-center gap-2">
+          <div className="flex shrink-0 flex-col items-center gap-1.5">
             <Button
               type="button"
               variant="ghost"
@@ -113,7 +159,7 @@ export function FeedView({
               onClick={onOpenAccounts}
             >
               <Avatar size="lg">
-                <AvatarFallback>{initial || "주"}</AvatarFallback>
+                <AvatarFallback className="text-sm">{initial || "주"}</AvatarFallback>
               </Avatar>
             </Button>
             <Button
@@ -122,12 +168,18 @@ export function FeedView({
               size="icon-lg"
               className="size-11 rounded-full"
               aria-label={meta.saved ? "저장됨" : "저장"}
+              aria-pressed={meta.saved}
               onClick={actions.toggleSave}
             >
-              <BookmarkIcon className={meta.saved ? "size-6 fill-current" : "size-6"} />
+              <BookmarkIcon
+                className={
+                  meta.saved ? "size-6 fill-current text-foreground" : "size-6 text-foreground/80"
+                }
+              />
             </Button>
           </div>
         </div>
+
         {view.control.kind === "choices" ? (
           <div className="flex flex-col gap-2">
             {view.control.options.map((option) => (
@@ -135,7 +187,7 @@ export function FeedView({
                 key={option.actionId}
                 type="button"
                 variant="secondary"
-                className="h-auto min-h-11 w-full justify-start px-3 py-3 text-left whitespace-normal"
+                className="h-auto min-h-12 w-full justify-start px-3 py-3 text-left text-[15px] leading-snug whitespace-normal"
                 onClick={() =>
                   actions.dispatch({
                     kind: "activate",
@@ -150,6 +202,7 @@ export function FeedView({
             ))}
           </div>
         ) : null}
+
         {view.control.kind === "text" ? (
           <TextStep
             key={frame.transitionId}
@@ -160,33 +213,60 @@ export function FeedView({
             transitionId={frame.transitionId}
           />
         ) : null}
+
         {view.role === "advisor" ? (
           <Button
             type="button"
             variant="ghost"
-            className="w-full text-muted-foreground"
+            className="min-h-11 w-full text-muted-foreground"
             onClick={() => actions.dispatch({ kind: "cancel-advisor" })}
           >
             돌아가기
           </Button>
+        ) : null}
+
+        {canTapAdvance ? (
+          <p className="text-center text-xs text-muted-foreground">탭하거나 위로 밀어 다음</p>
         ) : null}
       </div>
     </section>
   );
 }
 
-function Hero({ block }: { block: Block }) {
+function Hero({ block, centered }: { block: Block; centered: boolean }) {
   const reading =
-    block.text.length > 80
-      ? "text-xl"
-      : block.text.length > 36
-        ? "text-2xl"
-        : "text-3xl";
+    block.text.length > 120
+      ? "text-lg leading-relaxed"
+      : block.text.length > 80
+        ? "text-xl leading-relaxed"
+        : block.text.length > 36
+          ? "text-2xl leading-snug"
+          : "text-3xl leading-snug";
   return (
-    <h1 className={`${reading} leading-snug font-semibold tracking-tight text-balance`}>
+    <h1
+      className={`${reading} font-semibold tracking-tight text-balance ${centered ? "mx-auto max-w-[22rem]" : ""}`}
+    >
       {block.text}
     </h1>
   );
+}
+
+function ReadingLine({ block, centered }: { block: Block; centered: boolean }) {
+  return (
+    <p
+      className={`text-base leading-relaxed text-foreground/90 ${centered ? "mx-auto max-w-[22rem]" : ""}`}
+    >
+      {block.text}
+    </p>
+  );
+}
+
+function MetaLine({ block, centered }: { block: Block; centered: boolean }) {
+  const className =
+    block.kind === "source" || block.kind === "badge"
+      ? `text-sm text-muted-foreground ${centered ? "mx-auto max-w-[22rem]" : ""}`
+      : `text-xs uppercase tracking-wide text-muted-foreground ${centered ? "mx-auto max-w-[22rem]" : ""}`;
+  return <p className={className}>{block.text}</p>;
 }
 
 function TextStep({
@@ -203,6 +283,8 @@ function TextStep({
   transitionId: string;
 }) {
   const { actions } = useCampus();
+  const [focused, setFocused] = useState(false);
+  useFieldFocusLock(focused);
   const form = useForm({
     defaultValues: { value: "" },
     onSubmit: ({ value }) => {
@@ -230,12 +312,19 @@ function TextStep({
             maxLength={maxLength}
             placeholder={placeholder}
             enterKeyHint="done"
-            onBlur={field.handleBlur}
+            className="min-h-11"
+            onFocus={() => setFocused(true)}
+            onBlur={() => {
+              setFocused(false);
+              field.handleBlur();
+            }}
             onChange={(event) => field.handleChange(event.target.value)}
           />
         )}
       </form.Field>
-      <Button type="submit">{label}</Button>
+      <Button type="submit" className="min-h-11">
+        {label}
+      </Button>
     </form>
   );
 }

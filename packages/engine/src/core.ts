@@ -374,11 +374,14 @@ function initialFeedBookmark(campus) {
   };
 }
 
+var DEFAULT_DAILY_GOAL = 5;
+
 function freshProgress(now) {
   return {
     tutorMemory: {},
     dayPulse: { date: dateKeyFromMs(now), completed: 0 },
     wrongTutor: null,
+    dailyGoal: DEFAULT_DAILY_GOAL,
   };
 }
 
@@ -402,7 +405,11 @@ function touchDayPulse(progress, now) {
       tutorMemory: progress.tutorMemory,
       dayPulse: { date: key, completed: 0 },
       wrongTutor: progress.wrongTutor,
+      dailyGoal: typeof progress.dailyGoal === "number" ? progress.dailyGoal : DEFAULT_DAILY_GOAL,
     };
+  }
+  if (typeof progress.dailyGoal !== "number") {
+    return Object.assign({}, progress, { dailyGoal: DEFAULT_DAILY_GOAL });
   }
   return progress;
 }
@@ -539,11 +546,38 @@ function applyTutorSm2(prev, grade, now, transitionId) {
 }
 
 function canAdvance(encounter) {
-  if (encounter.role === "hub") return true;
+  if (encounter.role === "hub" || encounter.role === "day-close") return true;
   if (encounter.role === "librarian" || encounter.role === "roommate") return true;
   if (encounter.role === "tutor") return encounter.phase === "revealed";
   if (encounter.role === "editor") return encounter.phase === "patched";
   return false;
+}
+
+function projectDayCloseView(state) {
+  var goal = state.progress.dailyGoal || DEFAULT_DAILY_GOAL;
+  var done = state.progress.dayPulse.completed;
+  return {
+    role: "day-close",
+    letter: "",
+    roleLabel: ROLE_LABELS.hub,
+    weekLabel: null,
+    pentadIndex: null,
+    blocks: [
+      { kind: "title", text: "오늘은 여기까지" },
+      {
+        kind: "body",
+        text:
+          "하루 " +
+          goal +
+          "장 중 " +
+          done +
+          "장을 봤습니다. 내일 같은 주제로 이어집니다.",
+      },
+    ],
+    control: { kind: "advance", label: "확인" },
+    dayCount: done,
+    authorBrief: state.authorBrief,
+  };
 }
 
 function actionId(prefix, idx) {
@@ -619,8 +653,18 @@ function projectCardView(state, encounter) {
     }
     control = { kind: "advance", label: "다음" };
   } else if (card.role === "tutor") {
-    blocks.push({ kind: "title", text: card.question });
+    if (
+      state.session.kind === "feed" &&
+      state.session.feed.tutorSecondLook === card.id &&
+      encounter.phase === "asking"
+    ) {
+      blocks.push({
+        kind: "eyebrow",
+        text: "아까 놓친 질문입니다. 한 번 더 봅니다.",
+      });
+    }
     if (encounter.phase === "asking") {
+      blocks.push({ kind: "title", text: card.question });
       control = {
         kind: "choices",
         options: card.choices.map(function (ch, idx) {
@@ -635,10 +679,25 @@ function projectCardView(state, encounter) {
         tone: encounter.verdict === "correct" ? "good" : "retry",
         text: verdict,
       });
-      blocks.push({ kind: "body", text: card.reveal });
+      blocks.push({ kind: "title", text: card.reveal });
+      var picked = card.choices[encounter.selectedIndex];
+      if (encounter.verdict !== "correct" && picked) {
+        blocks.push({ kind: "body", text: "내가 고른 답: " + picked.label });
+      }
+      blocks.push({ kind: "body", text: "질문: " + card.question });
       control = { kind: "advance", label: "다음" };
     }
   } else if (card.role === "editor") {
+    if (
+      state.session.kind === "feed" &&
+      state.session.feed.bridgeHint &&
+      encounter.phase === "hole"
+    ) {
+      blocks.push({
+        kind: "body",
+        text: "방금 정리: " + state.session.feed.bridgeHint,
+      });
+    }
     blocks.push({ kind: "title", text: card.argument });
     blocks.push({ kind: "body", text: "구멍: " + card.holeLabel });
     if (encounter.phase === "hole") {
@@ -776,6 +835,20 @@ function schedule(state, now, intent) {
   }
 
   var feed = working.session.feed;
+  if (feed.dayClose) {
+    if (feed.dayCloseDate !== working.progress.dayPulse.date && feed.resumeFeed) {
+      working = Object.assign({}, working, {
+        session: { kind: "feed", feed: feed.resumeFeed },
+      });
+      feed = working.session.feed;
+    } else {
+      return {
+        kind: "card",
+        transitionId: working.transitionId,
+        view: projectDayCloseView(working),
+      };
+    }
+  }
   if (feed.hub || feed.current.role === "hub") {
     return {
       kind: "card",
@@ -955,6 +1028,9 @@ function templateCampusFromAnswers(answers) {
 
 function withBump(state, patch, now) {
   var progress = touchDayPulse(state.progress, now);
+  if (patch && patch.progress) {
+    progress = Object.assign({}, progress, patch.progress);
+  }
   return Object.assign({}, state, patch, {
     progress: progress,
     transitionId: nextTransitionId(state),
@@ -1151,9 +1227,12 @@ function recordAdvisor(state, event, now) {
     var campus = templateCampusFromAnswers(answers);
     var brief = buildAuthorBrief(answers);
     var newFeed = initialFeedBookmark(campus);
+    var rhythmGoal =
+      typeof answers.rhythm === "number" ? answers.rhythm : DEFAULT_DAILY_GOAL;
     return withBump(state, {
       campus: campus,
       authorBrief: brief,
+      progress: Object.assign({}, state.progress, { dailyGoal: rhythmGoal }),
       session: { kind: "feed", feed: newFeed },
     }, now);
   }
@@ -1229,9 +1308,37 @@ function recordActivate(state, feed, event, now) {
   return state;
 }
 
+function finishAdvance(state, progress, feed, completed, recent, resumeFeed, now) {
+  var dailyGoal = progress.dailyGoal || DEFAULT_DAILY_GOAL;
+  if (progress.dayPulse.completed >= dailyGoal) {
+    return withBump(state, {
+      progress: progress,
+      session: {
+        kind: "feed",
+        feed: {
+          current: { role: "day-close", phase: "open" },
+          slotIndex: feed.slotIndex,
+          ideaId: feed.ideaId,
+          completedCardIds: completed,
+          recentIdeaIds: recent,
+          hub: false,
+          dayClose: true,
+          dayCloseDate: progress.dayPulse.date,
+          resumeFeed: resumeFeed,
+        },
+      },
+    }, now);
+  }
+  return withBump(state, {
+    progress: progress,
+    session: { kind: "feed", feed: resumeFeed },
+  }, now);
+}
+
 function recordAdvance(state, feed, now) {
   var enc = feed.current;
   if (enc.role === "hub") return state;
+  if (enc.role === "day-close") return state;
 
   var card = findCard(state.campus, enc.cardId);
   var completed = feed.completedCardIds.concat([enc.cardId]);
@@ -1254,57 +1361,57 @@ function recordAdvance(state, feed, now) {
 
   var nextPick = pickNextLearning(state.campus, feed, progress, now);
   if (nextPick && nextPick.hub) {
-    return withBump(state, {
-      progress: progress,
-      session: {
-        kind: "feed",
-        feed: {
-          current: { role: "hub", phase: "open" },
-          slotIndex: 0,
-          ideaId: feed.ideaId,
-          completedCardIds: completed,
-          recentIdeaIds: recent,
-          hub: true,
-        },
-      },
-    }, now);
+    var hubFeed = {
+      current: { role: "hub", phase: "open" },
+      slotIndex: 0,
+      ideaId: feed.ideaId,
+      completedCardIds: completed,
+      recentIdeaIds: recent,
+      hub: true,
+    };
+    return finishAdvance(state, progress, feed, completed, recent, hubFeed, now);
   }
 
   if (!nextPick || !nextPick.card) {
-    return withBump(state, {
-      progress: progress,
-      session: {
-        kind: "feed",
-        feed: {
-          current: { role: "hub", phase: "open" },
-          slotIndex: 0,
-          ideaId: feed.ideaId,
-          completedCardIds: completed,
-          recentIdeaIds: recent,
-          hub: true,
-        },
-      },
-    }, now);
+    var emptyHubFeed = {
+      current: { role: "hub", phase: "open" },
+      slotIndex: 0,
+      ideaId: feed.ideaId,
+      completedCardIds: completed,
+      recentIdeaIds: recent,
+      hub: true,
+    };
+    return finishAdvance(state, progress, feed, completed, recent, emptyHubFeed, now);
   }
 
   if (nextPick.clearWrong) {
     progress.wrongTutor = null;
   }
 
-  return withBump(state, {
-    progress: progress,
-    session: {
-      kind: "feed",
-      feed: {
-        current: beginEncounter(nextPick.card),
-        slotIndex: nextPick.slotIndex,
-        ideaId: nextPick.ideaId,
-        completedCardIds: completed,
-        recentIdeaIds: recent,
-        hub: false,
-      },
-    },
-  }, now);
+  var bridgeHint = null;
+  if (
+    nextPick.card &&
+    nextPick.card.role === "editor" &&
+    enc.role === "tutor" &&
+    enc.phase === "revealed" &&
+    card &&
+    card.reveal
+  ) {
+    bridgeHint = card.reveal;
+  }
+
+  var nextFeed = {
+    current: beginEncounter(nextPick.card),
+    slotIndex: nextPick.slotIndex,
+    ideaId: nextPick.ideaId,
+    completedCardIds: completed,
+    recentIdeaIds: recent,
+    hub: false,
+    tutorSecondLook: nextPick.clearWrong ? nextPick.card.id : null,
+    bridgeHint: bridgeHint,
+  };
+
+  return finishAdvance(state, progress, feed, completed, recent, nextFeed, now);
 }
 
 function dumpState(state) {
@@ -1326,12 +1433,18 @@ function parseState(json, fallbackCampus, now) {
       };
     }
     var campus = parseCampus(raw.campus || fallbackCampus);
+    var loadedProgress = raw.progress || freshProgress(now);
+    if (typeof loadedProgress.dailyGoal !== "number") {
+      loadedProgress = Object.assign({}, loadedProgress, {
+        dailyGoal: DEFAULT_DAILY_GOAL,
+      });
+    }
     return {
       state: {
         schema: 1,
         campus: campus,
         session: raw.session,
-        progress: raw.progress || freshProgress(now),
+        progress: loadedProgress,
         transitionId: raw.transitionId || "t-0",
         notice: raw.notice || null,
         authorBrief: raw.authorBrief || null,

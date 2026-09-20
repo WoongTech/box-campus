@@ -72,6 +72,11 @@ export type FeedBookmark = {
   completedCardIds: string[];
   recentIdeaIds: string[];
   hub: boolean;
+  dayClose?: boolean;
+  dayCloseDate?: string;
+  resumeFeed?: FeedBookmark;
+  tutorSecondLook?: string | null;
+  bridgeHint?: string | null;
 };
 
 export type Session =
@@ -87,6 +92,7 @@ export type PlayerState = {
     tutorMemory: Record<string, unknown>;
     dayPulse: { date: string; completed: number };
     wrongTutor: { cardId: string; cardsSinceWrong: number } | null;
+    dailyGoal: number;
   };
   transitionId: string;
   notice: string | null;
