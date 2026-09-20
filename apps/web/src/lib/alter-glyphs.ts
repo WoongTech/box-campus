@@ -1,82 +1,53 @@
-export type AlterSquare = { kind: "square"; x: number; y: number; w: number; h: number };
-export type AlterRing = { kind: "ring"; cx: number; cy: number; r: number; inner: number };
-export type AlterTriangle = {
-  kind: "triangle";
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  x3: number;
-  y3: number;
-};
+export const ALTER_STROKE = 6;
 
-export type AlterPrimitive = AlterSquare | AlterRing | AlterTriangle;
-
-export type AlterLetter = {
+export type AlterGlyph = {
   width: number;
-  primitives: AlterPrimitive[];
+  d: string;
+  dots?: ReadonlyArray<readonly [number, number]>;
 };
 
-const LETTER_GAP = 1.8;
-const TOP = 4.2;
-const BASE = 15.2;
-const W = 1.65;
-
-const a: AlterLetter = {
-  width: 10.6,
-  primitives: [
-    { kind: "ring", cx: 5.3, cy: 9.7, r: 5.3, inner: 3.65 },
-    { kind: "square", x: 8.95, y: TOP, w: W, h: BASE - TOP },
-  ],
+const a: AlterGlyph = {
+  width: 27,
+  d: "M15 16 A10 10 0 1 0 15 36 M24 14 V38",
 };
 
-const l: AlterLetter = {
-  width: W,
-  primitives: [{ kind: "square", x: 0, y: 0, w: W, h: BASE }],
+const l: AlterGlyph = {
+  width: 6,
+  d: "M3 3 V38",
 };
 
-const t: AlterLetter = {
-  width: 8.2,
-  primitives: [
-    { kind: "square", x: 3.25, y: 0, w: W, h: BASE },
-    { kind: "square", x: 0, y: TOP, w: 8.2, h: W },
-  ],
+const t: AlterGlyph = {
+  width: 26,
+  d: "M12 3 V38 M2 14 H5 M19 14 H24",
 };
 
-const e: AlterLetter = {
-  width: 8.2,
-  primitives: [
-    { kind: "square", x: 0, y: TOP, w: W, h: BASE - TOP },
-    { kind: "square", x: 0, y: TOP, w: 8.2, h: W },
-    { kind: "square", x: 0, y: 8.88, w: 5.6, h: W },
-    { kind: "square", x: 0, y: BASE - W, w: 8.2, h: W },
-  ],
+const e: AlterGlyph = {
+  width: 20,
+  d: "M15 16.5 A10 10 0 1 0 15 35.5",
+  dots: [[9, 26]],
 };
 
-const r: AlterLetter = {
-  width: 5.2,
-  primitives: [
-    { kind: "square", x: 0, y: TOP, w: W, h: BASE - TOP },
-    { kind: "square", x: 0, y: TOP, w: 5.2, h: W },
-    { kind: "triangle", x1: W, y1: TOP + W, x2: W, y2: TOP + W + 3.4, x3: W + 3.4, y3: TOP + W + 3.4 },
-  ],
+const r: AlterGlyph = {
+  width: 20,
+  d: "M3 16 V38 M10 17.5 A7 7 0 0 1 16.5 25",
 };
 
-const letters: Record<"a" | "l" | "t" | "e" | "r", AlterLetter> = { a, l, t, e, r };
+const letters = { a, l, t, e, r } as const;
 
-export type AlterWord = readonly ("a" | "l" | "t" | "e" | "r")[];
+export type AlterWord = readonly (keyof typeof letters)[];
 
-export function alterPlacements(word: AlterWord) {
-  const placements: { x: number; primitive: AlterPrimitive }[] = [];
+const TRACK = 4;
+export const ALTER_HEIGHT = 42;
+
+export function alterGlyphs(word: AlterWord) {
+  const glyphs: { x: number; glyph: AlterGlyph }[] = [];
   let x = 0;
 
   for (let index = 0; index < word.length; index += 1) {
-    const letter = letters[word[index]];
-    for (const primitive of letter.primitives) {
-      placements.push({ x, primitive });
-    }
-    x += letter.width + (index < word.length - 1 ? LETTER_GAP : 0);
+    const glyph = letters[word[index]];
+    glyphs.push({ x, glyph });
+    x += glyph.width + (index < word.length - 1 ? TRACK : 0);
   }
 
-  return { placements, width: x, height: BASE };
+  return { glyphs, width: x, height: ALTER_HEIGHT };
 }
