@@ -4,6 +4,7 @@ import { use, useEffect, useMemo, useRef, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createContext } from "react";
 import { toast } from "sonner";
+import { Wordmark } from "./brand";
 import {
   BOX_CAMPUS_SAMPLE,
   dumpState,
@@ -14,9 +15,25 @@ import {
   type Frame,
   type PlayerState,
 } from "@box-campus/engine";
+import {
+  beginRemoteApply,
+  bindRemoteStale,
+  endRemoteApply,
+  fetchShelf,
+  isRemoteNewer,
+  localRemoteUser,
+  localSyncedAt,
+  markRemoteReady,
+  rememberRemoteUser,
+  rememberSyncedAt,
+  schedulePush,
+  subscribeAuth,
+  type RemoteShelf,
+} from "./remote-sync";
 
 const SESSION_KEY = "box-campus-v1";
 const LIBRARY_KEY = "box-campus-library-v1";
+const SEEDED_CAMPUS_ID = "sample-photo-exposure";
 
 export type Library = {
   order: string[];
@@ -57,12 +74,21 @@ function loadLibrary(): Library {
   try {
     const raw = window.localStorage.getItem(LIBRARY_KEY);
     const data = raw ? (JSON.parse(raw) as Partial<Library>) : null;
-    if (!data?.shelves) return emptyLibrary();
-    return {
-      order: data.order ?? [],
-      shelves: data.shelves,
-      saved: data.saved ?? [],
-    };
+    const loaded = !data?.shelves
+      ? emptyLibrary()
+      : {
+          order: data.order ?? [],
+          shelves: data.shelves,
+          saved: data.saved ?? [],
+        };
+    const stripped = withoutSeed(loaded);
+    if (
+      stripped.order.length !== loaded.order.length ||
+      stripped.saved.length !== loaded.saved.length
+    ) {
+      window.localStorage.setItem(LIBRARY_KEY, JSON.stringify(stripped));
+    }
+    return stripped;
   } catch {
     return emptyLibrary();
   }
@@ -75,6 +101,57 @@ function feedIdea(state: PlayerState) {
 function cardIdOf(state: PlayerState) {
   if (state.session.kind !== "feed") return "";
   return state.session.feed.current.cardId ?? "";
+}
+
+function publishRemote() {
+  const sessionRaw = window.localStorage.getItem(SESSION_KEY);
+  const libraryRaw = window.localStorage.getItem(LIBRARY_KEY);
+  if (!sessionRaw || !libraryRaw || sessionIsSeed(sessionRaw)) return;
+  schedulePush(sessionRaw, libraryRaw);
+}
+
+function sessionIsSeed(raw: string) {
+  try {
+    const data = JSON.parse(raw) as { campus?: { id?: string } };
+    return data.campus?.id === SEEDED_CAMPUS_ID;
+  } catch {
+    return false;
+  }
+}
+
+function withoutSeed(library: Library): Library {
+  const seeded = library.shelves[SEEDED_CAMPUS_ID];
+  let saved = library.saved;
+  if (seeded) {
+    try {
+      const dumped = JSON.parse(seeded) as { campus?: { cards?: { id: string }[] } };
+      const ids = new Set((dumped.campus?.cards ?? []).map((card) => card.id));
+      saved = saved.filter((id) => !ids.has(id));
+    } catch {
+      saved = library.saved;
+    }
+  }
+  const shelves = { ...library.shelves };
+  delete shelves[SEEDED_CAMPUS_ID];
+  return {
+    order: library.order.filter((id) => id !== SEEDED_CAMPUS_ID),
+    shelves,
+    saved,
+  };
+}
+
+function libraryFromText(raw: string): Library | null {
+  try {
+    const data = JSON.parse(raw) as Partial<Library>;
+    if (!data.shelves) return null;
+    return {
+      order: data.order ?? [],
+      shelves: data.shelves,
+      saved: data.saved ?? [],
+    };
+  } catch {
+    return null;
+  }
 }
 
 export function CampusProvider({ children }: { children: ReactNode }) {
@@ -93,6 +170,7 @@ export function CampusProvider({ children }: { children: ReactNode }) {
   const state = sessionQuery.data;
   const library = libraryQuery.data;
   const navDirection = useRef<"next" | "back">("next");
+  const reconciledUser = useRef<string | null>(null);
 
   useEffect(() => {
     if (!state?.notice) return;
@@ -101,6 +179,19 @@ export function CampusProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!state || !library) return;
+    if (state.campus.id !== SEEDED_CAMPUS_ID) return;
+    const nextId = library.order.find((id) => library.shelves[id]);
+    const raw = nextId ? library.shelves[nextId] : null;
+    if (!raw) return;
+    const next = parseState(raw, BOX_CAMPUS_SAMPLE, Date.now()).state;
+    if (next.campus.id === SEEDED_CAMPUS_ID) return;
+    window.localStorage.setItem(SESSION_KEY, dumpState(next));
+    queryClient.setQueryData(["session"], next);
+  }, [library, queryClient, state]);
+
+  useEffect(() => {
+    if (!state || !library) return;
+    if (state.campus.id === SEEDED_CAMPUS_ID) return;
     if (library.shelves[state.campus.id]) return;
     const stored: Library = {
       ...library,
@@ -111,7 +202,93 @@ export function CampusProvider({ children }: { children: ReactNode }) {
     };
     window.localStorage.setItem(LIBRARY_KEY, JSON.stringify(stored));
     queryClient.setQueryData(["library"], stored);
+    publishRemote();
   }, [library, queryClient, state]);
+
+  useEffect(() => {
+    if (!sessionQuery.isSuccess || !libraryQuery.isSuccess) return;
+
+    function applyShelf(remote: RemoteShelf, message: string | null) {
+      const nextLibrary = withoutSeed(libraryFromText(remote.library) ?? emptyLibrary());
+      if (!nextLibrary) return;
+      const parsed = parseState(remote.session, BOX_CAMPUS_SAMPLE, Date.now());
+      beginRemoteApply();
+      window.localStorage.setItem(SESSION_KEY, dumpState(parsed.state));
+      window.localStorage.setItem(LIBRARY_KEY, JSON.stringify(nextLibrary));
+      rememberSyncedAt(remote.updatedAt);
+      queryClient.setQueryData(["session"], parsed.state);
+      queryClient.setQueryData(["library"], nextLibrary);
+      endRemoteApply();
+      if (message) toast(message);
+    }
+
+    async function pullIfNewer(message: string | null) {
+      const result = await fetchShelf();
+      if ("error" in result || !result.shelf) return;
+      if (!isRemoteNewer(result.shelf.updatedAt, localSyncedAt())) return;
+      applyShelf(result.shelf, message);
+    }
+
+    async function reconcile(userId: string) {
+      const result = await fetchShelf();
+      if ("error" in result) {
+        markRemoteReady();
+        toast("다른 기기와 맞추지 못했습니다");
+        return;
+      }
+      const remote = result.shelf;
+      const lastUser = localRemoteUser();
+      if (remote && (lastUser !== userId || isRemoteNewer(remote.updatedAt, localSyncedAt()))) {
+        applyShelf(remote, "다른 기기의 기록을 가져왔습니다");
+        rememberRemoteUser(userId);
+        return;
+      }
+      if (lastUser && lastUser !== userId && !remote) {
+        const fresh = parseState(null, BOX_CAMPUS_SAMPLE, Date.now()).state;
+        beginRemoteApply();
+        window.localStorage.setItem(SESSION_KEY, dumpState(fresh));
+        window.localStorage.setItem(LIBRARY_KEY, JSON.stringify(emptyLibrary()));
+        queryClient.setQueryData(["session"], fresh);
+        queryClient.setQueryData(["library"], emptyLibrary());
+        rememberRemoteUser(userId);
+        rememberSyncedAt(new Date().toISOString());
+        endRemoteApply();
+        toast("이 계정에는 아직 기록이 없습니다");
+        return;
+      }
+      rememberRemoteUser(userId);
+      markRemoteReady();
+      const current = queryClient.getQueryData<PlayerState>(["session"]);
+      const sessionRaw = window.localStorage.getItem(SESSION_KEY) ?? (current ? dumpState(current) : null);
+      const libraryRaw = window.localStorage.getItem(LIBRARY_KEY);
+      if (sessionRaw && libraryRaw) schedulePush(sessionRaw, libraryRaw);
+    }
+
+    bindRemoteStale(() => {
+      void pullIfNewer("다른 기기의 기록을 가져왔습니다");
+    });
+    const stopAuth = subscribeAuth((userId) => {
+      if (!userId) {
+        reconciledUser.current = null;
+        return;
+      }
+      if (reconciledUser.current === userId) return;
+      reconciledUser.current = userId;
+      void reconcile(userId);
+    });
+    const poll = window.setInterval(() => {
+      void pullIfNewer("스토리가 갱신되었습니다");
+    }, 8000);
+    function onFocus() {
+      void pullIfNewer("스토리가 갱신되었습니다");
+    }
+    window.addEventListener("focus", onFocus);
+    return () => {
+      stopAuth();
+      window.clearInterval(poll);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [libraryQuery.isSuccess, queryClient, sessionQuery.isSuccess]);
 
   const value = useMemo<CampusContextValue | null>(() => {
     if (!state || !library) return null;
@@ -120,10 +297,12 @@ export function CampusProvider({ children }: { children: ReactNode }) {
     function writeLibrary(next: Library) {
       window.localStorage.setItem(LIBRARY_KEY, JSON.stringify(next));
       queryClient.setQueryData(["library"], next);
+      publishRemote();
     }
 
     function remember(next: PlayerState, shelf: Library) {
       const id = next.campus.id;
+      if (id === SEEDED_CAMPUS_ID) return shelf;
       const stored: Library = {
         ...shelf,
         shelves: { ...shelf.shelves, [id]: dumpState(next) },
@@ -258,11 +437,8 @@ export function CampusProvider({ children }: { children: ReactNode }) {
 
   if (!value) {
     return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-[390px] flex-col items-center justify-center gap-3 bg-background px-6">
-        <div className="h-1 w-16 overflow-hidden rounded-full bg-muted">
-          <div className="h-full w-1/2 animate-pulse rounded-full bg-foreground/40" />
-        </div>
-        <p className="text-sm text-muted-foreground">학습 피드를 준비하는 중</p>
+      <main className="mx-auto flex min-h-dvh w-full max-w-[390px] flex-col items-center justify-center gap-4 bg-background px-6">
+        <Wordmark />
       </main>
     );
   }

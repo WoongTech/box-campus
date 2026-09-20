@@ -1,5 +1,5 @@
 export function parsePastedCampus(text: string): unknown {
-  const trimmed = text.trim();
+  const trimmed = stripFence(text.trim());
   if (!trimmed) return { invalid: true };
 
   const candidates = [trimmed];
@@ -17,6 +17,11 @@ export function parsePastedCampus(text: string): unknown {
   }
 
   return { invalid: true };
+}
+
+function stripFence(text: string) {
+  const fenced = text.match(/```(?:json|javascript|js)?\s*([\s\S]*?)```/i);
+  return (fenced?.[1] ?? text).trim();
 }
 
 function isPackWrapper(value: unknown): value is { BOX_CAMPUS_PACK: unknown } {

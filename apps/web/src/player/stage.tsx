@@ -3,9 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useCampus } from "./campus-provider";
 import { useInteractionLock } from "./interaction-lock";
-import { AccountSheet, ImportSheet } from "./sheets";
+import { ImportSheet } from "./sheets";
+import { ComposeSheet } from "./compose-sheet";
 import { FeedView } from "./feed-view";
+import { HomeView, SavedView } from "./home-view";
 import { StripView } from "./strip-view";
+import { TabBar } from "./tab-bar";
 
 const WHEEL_LOCK_MS = 450;
 const LEFT_ZONE = 0.33;
@@ -21,21 +24,21 @@ function isTextFieldFocused() {
 export function Stage() {
   const { frame, actions, state } = useCampus();
   const { locked: fieldLocked } = useInteractionLock();
-  const [accountsOpen, setAccountsOpen] = useState(
-    () => typeof window !== "undefined" && !window.localStorage.getItem("box-campus-v1"),
-  );
+  const [surface, setSurface] = useState<"home" | "story" | "saved">("home");
   const [importOpen, setImportOpen] = useState(false);
+  const [composeOpen, setComposeOpen] = useState(false);
   const startY = useRef(0);
   const startX = useRef(0);
   const wheelLock = useRef(false);
   const skipClick = useRef(false);
 
   const cardRole = frame.kind === "card" ? frame.view.role : "";
-  const interactionBlocked = accountsOpen || importOpen || fieldLocked;
+  const inStory = surface === "story" && frame.kind === "card";
+  const interactionBlocked = !inStory || importOpen || composeOpen || fieldLocked;
 
   function exitStory() {
-    if (accountsOpen) {
-      setAccountsOpen(false);
+    if (composeOpen) {
+      setComposeOpen(false);
       return;
     }
     if (importOpen) {
@@ -50,13 +53,13 @@ export function Stage() {
       actions.dispatch({ kind: "close-strip", transitionId: frame.transitionId });
       return;
     }
-    setAccountsOpen(true);
+    setSurface("home");
   }
 
   function goNext() {
     if (frame.kind !== "card") return;
     if (cardRole === "hub") {
-      setAccountsOpen(true);
+      setSurface("home");
       return;
     }
     if (cardRole === "day-close") return;
@@ -88,11 +91,11 @@ export function Stage() {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [interactionBlocked, fieldLocked, cardRole, actions, accountsOpen, importOpen, frame, state]);
+  }, [interactionBlocked, fieldLocked, cardRole, actions, importOpen, frame, state]);
 
   return (
     <main
-      className="relative mx-auto min-h-dvh w-full max-w-[390px] bg-background"
+      className="relative mx-auto h-dvh w-full max-w-[390px] overflow-hidden bg-background"
       onClick={(event) => {
         if (interactionBlocked || isTextFieldFocused()) return;
         if (skipClick.current) {
@@ -135,13 +138,46 @@ export function Stage() {
         }, WHEEL_LOCK_MS);
       }}
     >
-      {frame.kind === "strip" ? <StripView /> : <FeedView onOpenAccounts={() => setAccountsOpen(true)} />}
-      <AccountSheet
-        open={accountsOpen}
-        onOpenChange={setAccountsOpen}
-        onAdd={() => setImportOpen(true)}
+      {frame.kind === "strip" ? (
+        <StripView />
+      ) : surface === "story" ? (
+        <FeedView onClose={() => setSurface("home")} />
+      ) : surface === "saved" ? (
+        <SavedView
+          onOpenCard={(cardId) => {
+            actions.openSaved(cardId);
+            setSurface("story");
+          }}
+        />
+      ) : (
+        <HomeView
+          onCompose={() => setComposeOpen(true)}
+          onOpenStory={() => setSurface("story")}
+          onOpenIdea={(ideaId) => {
+            actions.openIdea(ideaId);
+            setSurface("story");
+          }}
+        />
+      )}
+      {surface !== "story" && frame.kind !== "strip" ? (
+        <TabBar
+          tab={surface === "saved" ? "saved" : "home"}
+          onHome={() => setSurface("home")}
+          onSaved={() => setSurface("saved")}
+          onCompose={() => setComposeOpen(true)}
+        />
+      ) : null}
+      <ComposeSheet
+        open={composeOpen}
+        onOpenChange={setComposeOpen}
+        onPaste={() => setImportOpen(true)}
+        onStartTopic={() => {
+          setSurface("story");
+          if (state.session.kind !== "feed") return;
+          actions.dispatch({ kind: "start-advisor" });
+        }}
       />
-      <ImportSheet open={importOpen} onOpenChange={setImportOpen} />
+      <ImportSheet open={importOpen} onOpenChange={setImportOpen} onImported={() => setSurface("story")} />
     </main>
   );
 }

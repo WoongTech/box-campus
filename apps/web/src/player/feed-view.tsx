@@ -3,9 +3,6 @@
 import { useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { BookmarkIcon, XIcon } from "lucide-react";
-import { toast } from "sonner";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -14,27 +11,31 @@ import { useCampus } from "./campus-provider";
 import { useFieldFocusLock } from "./interaction-lock";
 import { splitBlocks } from "./split-blocks";
 
-export function FeedView({
-  onOpenAccounts,
-}: {
-  onOpenAccounts: () => void;
-}) {
+export function FeedView({ onClose }: { onClose: () => void }) {
   const { state, frame, actions, meta, nav } = useCampus();
   if (frame.kind !== "card") return null;
   const view = frame.view;
   const split = splitBlocks(view.blocks);
-  const initial = state.campus.title.trim().slice(0, 1);
   const hasChoices = view.control.kind === "choices";
   const hasText = view.control.kind === "text";
   const canTapAdvance = view.control.kind === "advance";
   const eyebrows = split.meta.filter((block) => block.kind === "eyebrow");
-  const dockEyebrow = eyebrows[0]?.text;
   const promptEyebrows = eyebrows.slice(1);
   const showMetaInStrip =
     !hasChoices && split.meta.length > 0 && view.role !== "advisor";
+  const feed = state.session.kind === "feed" ? state.session.feed : null;
+  const ideaTitle = feed ? state.campus.ideas.find((idea) => idea.id === feed.ideaId)?.title : "";
+  const subtitle = [ideaTitle, view.dayCount > 0 ? `오늘 ${view.dayCount}` : ""].filter(Boolean).join(" · ");
+  const showDock =
+    hasChoices ||
+    hasText ||
+    view.role === "advisor" ||
+    view.role === "hub" ||
+    (canTapAdvance && view.role === "day-close");
+  const centered = !hasText;
 
   return (
-    <section className="relative flex min-h-dvh flex-col">
+    <section className="relative flex h-full min-h-0 flex-col">
       {typeof view.pentadIndex === "number" ? (
         <div
           className="pointer-events-none absolute inset-x-3 top-[max(0.65rem,env(safe-area-inset-top))] z-10 flex gap-1"
@@ -44,38 +45,48 @@ export function FeedView({
             <Progress
               key={index}
               value={index <= view.pentadIndex! ? 100 : 0}
-              className="h-0.5 flex-1 bg-muted/40 [&>div]:bg-foreground"
+              className="h-[3px] flex-1 overflow-hidden rounded-full bg-white/25 [&>div]:bg-white"
             />
           ))}
         </div>
       ) : null}
 
       <div
-        className="absolute inset-x-3 top-[max(1.35rem,env(safe-area-inset-top)+0.7rem)] z-20 flex items-center justify-between gap-3"
+        className="absolute inset-x-3 top-[max(1.7rem,env(safe-area-inset-top)+1.05rem)] z-20 flex items-center gap-2"
         onClick={(event) => event.stopPropagation()}
       >
-        <button
-          type="button"
-          className="flex min-w-0 items-center gap-2"
-          onClick={onOpenAccounts}
-        >
-          <Avatar>
-            <AvatarFallback className="text-xs">{initial || "주"}</AvatarFallback>
-          </Avatar>
-          <span className="truncate text-sm font-semibold">{state.campus.title}</span>
-        </button>
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-xs font-semibold">
+          {state.campus.title.trim().slice(0, 1) || "스"}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold leading-tight">{state.campus.title}</p>
+          {subtitle ? <p className="truncate text-[11px] text-white/70">{subtitle}</p> : null}
+        </div>
+        {meta.cardId ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="size-11 rounded-full"
+            aria-label={meta.saved ? "저장됨" : "저장"}
+            aria-pressed={meta.saved}
+            onClick={actions.toggleSave}
+          >
+            <BookmarkIcon className={meta.saved ? "size-5 fill-current" : "size-5"} />
+          </Button>
+        ) : null}
         <Button
           type="button"
           variant="ghost"
           size="icon"
           className="size-11 shrink-0 rounded-full"
-          aria-label={view.role === "advisor" ? "돌아가기" : "나가기"}
+          aria-label={view.role === "advisor" ? "돌아가기" : "닫기"}
           onClick={() => {
             if (view.role === "advisor") {
               actions.dispatch({ kind: "cancel-advisor" });
               return;
             }
-            onOpenAccounts();
+            onClose();
           }}
         >
           <XIcon className="size-5" />
@@ -85,15 +96,15 @@ export function FeedView({
       <div
         key={frame.transitionId}
         className={[
-          "flex min-h-0 flex-1 flex-col px-5 pt-[max(5.5rem,env(safe-area-inset-top)+4.25rem)]",
-          hasChoices || hasText ? "pb-3" : "pb-2",
+          "flex min-h-0 flex-1 flex-col px-5 pt-[max(6.25rem,env(safe-area-inset-top)+5rem)]",
+          hasChoices || hasText ? "pb-3" : "pb-8",
           "animate-in fade-in duration-300",
           nav === "back" ? "slide-in-from-left-8" : "slide-in-from-right-8",
         ].join(" ")}
       >
         <div
           className={
-            hasChoices || hasText
+            hasText
               ? "flex min-h-0 flex-1 flex-col justify-end gap-3"
               : "flex min-h-0 flex-1 flex-col justify-center gap-4 text-center"
           }
@@ -118,7 +129,7 @@ export function FeedView({
               ))
             : null}
           {split.hero ? (
-            <Hero block={split.hero} centered={!hasChoices && !hasText} />
+            <Hero block={split.hero} centered={centered} />
           ) : (
             <h1 className="text-2xl leading-snug font-semibold tracking-tight text-balance">
               {state.campus.title}
@@ -136,89 +147,21 @@ export function FeedView({
             </p>
           ) : null}
           {split.reading.map((block, index) => (
-            <ReadingLine key={`${block.kind}-${index}`} block={block} centered={!hasChoices && !hasText} />
+            <ReadingLine key={`${block.kind}-${index}`} block={block} centered={centered} />
           ))}
-          {view.role === "hub" ? <TopicRail /> : null}
           {showMetaInStrip
             ? split.meta.map((block, index) => (
-                <MetaLine key={`${block.kind}-${index}`} block={block} centered={!hasChoices && !hasText} />
+                <MetaLine key={`${block.kind}-${index}`} block={block} centered={centered} />
               ))
             : null}
         </div>
       </div>
 
+      {showDock ? (
       <div
-        className="z-10 shrink-0 space-y-3 border-t border-border/40 bg-background/90 px-4 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] backdrop-blur-sm supports-backdrop-filter:bg-background/75"
+        className="z-10 shrink-0 space-y-3 bg-background/90 px-4 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] backdrop-blur-sm supports-backdrop-filter:bg-background/75"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1 pt-0.5">
-            <p className="truncate text-sm font-semibold tracking-tight">
-              {state.campus.title}
-              {view.dayCount > 0 ? (
-                <Badge variant="secondary" className="ml-2 align-middle text-[11px]">
-                  오늘 {view.dayCount}
-                </Badge>
-              ) : null}
-            </p>
-            {hasChoices && dockEyebrow ? (
-              <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
-                {dockEyebrow}
-              </p>
-            ) : null}
-            {state.authorBrief ? (
-              <Button
-                type="button"
-                variant="link"
-                className="mt-1 h-auto px-0 text-xs text-muted-foreground"
-                onClick={() => {
-                  const brief = state.authorBrief;
-                  if (!brief || !navigator.clipboard?.writeText) {
-                    toast("이 브라우저에서는 복사할 수 없습니다");
-                    return;
-                  }
-                  void navigator.clipboard.writeText(brief).then(
-                    () => toast("브리프를 복사했습니다"),
-                    () => toast("이 브라우저에서는 복사할 수 없습니다"),
-                  );
-                }}
-              >
-                브리프 복사
-              </Button>
-            ) : null}
-          </div>
-          <div className="flex shrink-0 flex-col items-center gap-1.5">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-lg"
-              className="size-11 rounded-full p-0"
-              aria-label="따라가는 주제"
-              onClick={onOpenAccounts}
-            >
-              <Avatar size="lg">
-                <AvatarFallback className="text-sm">{initial || "주"}</AvatarFallback>
-              </Avatar>
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-lg"
-              className="size-11 rounded-full"
-              aria-label={meta.saved ? "저장됨" : "저장"}
-              aria-pressed={meta.saved}
-              disabled={!meta.cardId}
-              onClick={actions.toggleSave}
-            >
-              <BookmarkIcon
-                className={
-                  meta.saved ? "size-6 fill-current text-foreground" : "size-6 text-foreground/80"
-                }
-              />
-            </Button>
-          </div>
-        </div>
-
         {view.control.kind === "choices" ? (
           <div className="flex flex-col gap-2">
             {view.control.options.map((option) => (
@@ -226,7 +169,7 @@ export function FeedView({
                 key={option.actionId}
                 type="button"
                 variant="secondary"
-                className="h-auto min-h-12 w-full justify-start px-3 py-3 text-left text-[15px] leading-snug whitespace-normal"
+                className="h-auto min-h-12 w-full justify-center rounded-full px-4 py-3 text-center text-[15px] leading-snug whitespace-normal"
                 onClick={() =>
                   actions.dispatch({
                     kind: "activate",
@@ -265,60 +208,18 @@ export function FeedView({
         ) : null}
 
         {view.role === "hub" ? (
-          <Button type="button" className="min-h-11 w-full" onClick={onOpenAccounts}>
-            주제 갤러리
+          <Button type="button" className="min-h-11 w-full" onClick={onClose}>
+            홈
           </Button>
         ) : null}
 
         {canTapAdvance && view.role === "day-close" ? (
           <p className="text-center text-xs text-muted-foreground">오늘은 여기까지입니다. 내일 이어서 봅니다.</p>
         ) : null}
-
-        {canTapAdvance && view.role !== "day-close" && view.role !== "hub" ? (
-          <p className="text-center text-xs text-muted-foreground">왼쪽은 이전, 오른쪽은 다음</p>
-        ) : null}
       </div>
+      ) : null}
     </section>
   );
-}
-
-function TopicRail() {
-  const { state, library, actions } = useCampus();
-  if (library.order.length === 0) return null;
-  return (
-    <div className="mx-auto flex w-full max-w-[22rem] gap-2 overflow-x-auto pt-2">
-      {library.order.map((id) => {
-        const name = titleFromShelf(library.shelves[id], id);
-        const current = id === state.campus.id;
-        return (
-          <button
-            key={id}
-            type="button"
-            className={`flex h-28 w-24 shrink-0 flex-col justify-between rounded-2xl border px-3 py-3 text-left ${
-              current ? "border-foreground bg-foreground text-background" : "border-border bg-card/40"
-            }`}
-            onClick={(event) => {
-              event.stopPropagation();
-              if (!current) actions.openAccount(id);
-            }}
-          >
-            <span className="text-2xl font-semibold">{name.trim().slice(0, 1) || "주"}</span>
-            <span className="line-clamp-2 text-xs font-medium">{name}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function titleFromShelf(raw: string | undefined, fallback: string) {
-  if (!raw) return fallback;
-  try {
-    const parsed = JSON.parse(raw) as { campus?: { title?: string } };
-    return parsed.campus?.title || fallback;
-  } catch {
-    return fallback;
-  }
 }
 
 function Hero({ block, centered }: { block: Block; centered: boolean }) {

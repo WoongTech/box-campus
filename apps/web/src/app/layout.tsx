@@ -14,11 +14,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "상자",
-  description: "주제를 계정처럼 넘겨 보는 학습 피드",
+  title: "alter",
+  description: "주제를 넘겨 보는 학습",
   appleWebApp: {
     capable: true,
-    title: "상자",
+    title: "alter",
     statusBarStyle: "black-translucent",
   },
 };

@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "상자",
-    short_name: "상자",
-    description: "어떤 주제도 한 장씩 넘겨 보는 학습",
+    name: "alter",
+    short_name: "alter",
+    description: "주제를 넘겨 보는 학습",
     start_url: "/",
     display: "standalone",
     background_color: "#111111",

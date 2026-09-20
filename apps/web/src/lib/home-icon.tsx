@@ -1,13 +1,9 @@
 import { ImageResponse } from "next/og";
 
-const BACKGROUND = "#111111";
-const MARK = "#f5f5f5";
+const ink = "#f4f1ea";
 
 export function homeIcon(size: number) {
-  const stroke = Math.max(2, Math.round(size * 0.045));
-  const box = Math.round(size * 0.46);
-  const lid = Math.round(box * 0.28);
-  const radius = Math.round(size * 0.04);
+  const mark = Math.round(size * 0.62);
 
   return new ImageResponse(
     (
@@ -15,39 +11,16 @@ export function homeIcon(size: number) {
         style={{
           width: "100%",
           height: "100%",
-          background: BACKGROUND,
+          background: "#0c0c0c",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
-          <div
-            style={{
-              width: Math.round(box * 1.12),
-              height: lid,
-              border: `${stroke}px solid ${MARK}`,
-              borderRadius: radius,
-              display: "flex",
-            }}
-          />
-          <div
-            style={{
-              width: box,
-              height: Math.round(box * 0.62),
-              marginTop: Math.round(stroke * 0.65),
-              border: `${stroke}px solid ${MARK}`,
-              borderRadius: radius,
-              display: "flex",
-            }}
-          />
-        </div>
+        <svg width={mark} height={mark} viewBox="0 0 32 32">
+          <path fill={ink} fillRule="evenodd" d="M13 4a11 11 0 1 0 .01 0z M13 10a5 5 0 1 1-.01 0z M13 12.1 16 15 13 17.9 10 15z" />
+          <rect x="18.2" y="4" width="6" height="22" fill={ink} />
+        </svg>
       </div>
     ),
     { width: size, height: size },
