@@ -23,7 +23,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
   );
   const showMetaInStrip = !hasChoices && split.meta.length > 0 && view.role !== "advisor";
   const subtitle = ideaTitle;
-  const showDock = hasChoices || hasText || view.role === "advisor" || view.role === "hub";
+  const showDock = hasChoices || hasText || view.role === "hub";
   const slide = `${frame.transitionId}`;
   const hidden = failed.slide === slide ? failed.srcs : [];
   const images = split.images.filter((block) => !hidden.includes(block.src));
@@ -113,13 +113,13 @@ export function FeedView({ onClose }: { onClose: () => void }) {
             ? images.map((block) => (
                 <div
                   key={block.src}
-                  className={`-mx-6 overflow-hidden bg-white/5 ${showDock ? "aspect-video" : "aspect-[4/5]"}`}
+                  className={`-mx-6 flex w-[calc(100%+3rem)] items-center justify-center overflow-hidden bg-black ${showDock ? "aspect-video max-h-[32vh]" : "aspect-[4/5] max-h-[52vh]"}`}
                 >
                   <img
                     src={block.src}
                     alt={block.alt}
                     draggable={false}
-                    className="size-full object-cover"
+                    className="max-h-full max-w-full object-contain"
                     onError={() => hideImage(block.src)}
                   />
                 </div>
@@ -195,15 +195,6 @@ export function FeedView({ onClose }: { onClose: () => void }) {
               maxLength={view.control.maxLength}
               transitionId={frame.transitionId}
             />
-          ) : null}
-          {view.role === "advisor" ? (
-            <button
-              type="button"
-              className="min-h-11 w-full text-sm text-secondary"
-              onClick={() => actions.dispatch({ kind: "cancel-advisor" })}
-            >
-              돌아가기
-            </button>
           ) : null}
           {view.role === "hub" ? (
             <button type="button" className="min-h-11 w-full rounded-full bg-white text-sm font-semibold text-black" onClick={onClose}>

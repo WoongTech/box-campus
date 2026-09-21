@@ -266,7 +266,7 @@ function Cover({ src }: { src: string }) {
       src={src}
       alt=""
       draggable={false}
-      className="mt-3 aspect-[3/2] w-full rounded-2xl object-cover"
+      className="mt-3 aspect-[3/2] w-full rounded-2xl bg-black object-contain"
       onError={() => setVisible(false)}
     />
   );
