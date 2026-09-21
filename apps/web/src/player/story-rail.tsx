@@ -27,7 +27,7 @@ export function StoryRail({
         const name = titleOf(library.shelves[id], id);
         const current = id === state.campus.id;
         return (
-          <VStack key={id} gap={1} align="center">
+          <VStack key={id} gap={1} align="center" width={72} className="min-w-0 overflow-hidden">
             <Avatar
               name={name}
               size="lg"
@@ -38,7 +38,7 @@ export function StoryRail({
                 else if (!current) actions.openAccount(id);
               }}
             />
-            <Text type="supporting" weight={current ? "semibold" : "normal"}>
+            <Text type="supporting" maxLines={1} weight={current ? "semibold" : "normal"} className="w-full min-w-0">
               {name}
             </Text>
           </VStack>
