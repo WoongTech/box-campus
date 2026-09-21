@@ -10,6 +10,7 @@ import { splitBlocks } from "./split-blocks";
 
 export function FeedView({ onClose }: { onClose: () => void }) {
   const { state, frame, actions, meta, nav } = useCampus();
+  const [failed, setFailed] = useState<{ slide: string; srcs: string[] }>({ slide: "", srcs: [] });
   if (frame.kind !== "card") return null;
   const view = frame.view;
   const split = splitBlocks(view.blocks);
@@ -23,14 +24,26 @@ export function FeedView({ onClose }: { onClose: () => void }) {
   const showMetaInStrip = !hasChoices && split.meta.length > 0 && view.role !== "advisor";
   const subtitle = ideaTitle;
   const showDock = hasChoices || hasText || view.role === "advisor" || view.role === "hub";
-  const hasSlideImage = split.images.length > 0;
-  const centered = !hasText && !hasSlideImage;
+  const slide = `${frame.transitionId}`;
+  const hidden = failed.slide === slide ? failed.srcs : [];
+  const images = split.images.filter((block) => !hidden.includes(block.src));
+  const hasSlideImage = images.length > 0;
+  const readingLength =
+    (split.hero?.text.length ?? 0) + split.reading.reduce((sum, block) => sum + block.text.length, 0);
+  const centered = !hasText && !hasSlideImage && readingLength < 80;
+
+  function hideImage(src: string) {
+    setFailed((current) => {
+      const srcs = current.slide === slide ? current.srcs : [];
+      return srcs.includes(src) ? current : { slide, srcs: [...srcs, src] };
+    });
+  }
 
   return (
     <section className="relative flex h-full min-h-0 flex-col">
       {typeof view.pentadIndex === "number" ? (
         <div
-          className="pointer-events-none absolute inset-x-3 top-[max(0.5rem,env(safe-area-inset-top))] z-10 flex gap-1"
+          className="pointer-events-none flex shrink-0 gap-1 px-3 pt-[max(0.5rem,env(safe-area-inset-top))]"
           aria-hidden
         >
           {Array.from({ length: 4 }, (_, index) => (
@@ -41,18 +54,20 @@ export function FeedView({ onClose }: { onClose: () => void }) {
             </span>
           ))}
         </div>
-      ) : null}
+      ) : (
+        <div className="shrink-0 pt-[max(0.5rem,env(safe-area-inset-top))]" />
+      )}
 
       <div
-        className="absolute inset-x-3 top-[max(1.15rem,env(safe-area-inset-top)+0.7rem)] z-20 flex items-center gap-2"
+        className="flex shrink-0 items-center gap-2 px-3 pt-2"
         onClick={(event) => event.stopPropagation()}
       >
         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-xs font-semibold">
           {state.campus.title.trim().slice(0, 1) || "스"}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold leading-tight">{state.campus.title}</p>
-          {subtitle ? <p className="truncate text-[11px] text-white/70">{subtitle}</p> : null}
+          <p className="truncate text-[15px] font-semibold leading-tight">{state.campus.title}</p>
+          {subtitle ? <p className="truncate text-[12px] text-secondary">{subtitle}</p> : null}
         </div>
         {meta.cardId ? (
           <button
@@ -83,31 +98,34 @@ export function FeedView({ onClose }: { onClose: () => void }) {
 
       <div
         key={`${frame.transitionId}-${nav}`}
-        className={[
-          "flex min-h-0 flex-1 flex-col px-6 pt-[max(5.25rem,env(safe-area-inset-top)+4.25rem)]",
-          hasChoices || hasText ? "pb-3" : "pb-[max(2rem,env(safe-area-inset-bottom))]",
-        ].join(" ")}
+        className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 ${showDock ? "" : "pb-[env(safe-area-inset-bottom)]"}`}
       >
         <div
           className={
             hasSlideImage
-              ? "flex min-h-0 flex-1 flex-col gap-3"
+              ? `flex min-h-full flex-col gap-3 py-4 ${showDock ? "" : "justify-center"}`
               : hasText
-                ? "flex min-h-0 flex-1 flex-col justify-end gap-3"
-                : "flex min-h-0 flex-1 flex-col justify-center gap-4 text-center"
+                ? "flex min-h-full flex-col justify-end gap-3 py-4"
+                : `flex min-h-full flex-col justify-center gap-4 py-6 ${centered ? "text-center" : ""}`
           }
         >
           {hasSlideImage
-            ? split.images.map((block) => (
-                <img
+            ? images.map((block) => (
+                <div
                   key={block.src}
-                  src={block.src}
-                  alt={block.alt}
-                  className="max-h-[min(52vh,28rem)] w-full shrink-0 rounded-2xl object-cover"
-                />
+                  className={`-mx-6 overflow-hidden bg-white/5 ${showDock ? "aspect-video" : "aspect-[4/5]"}`}
+                >
+                  <img
+                    src={block.src}
+                    alt={block.alt}
+                    draggable={false}
+                    className="size-full object-cover"
+                    onError={() => hideImage(block.src)}
+                  />
+                </div>
               ))
             : null}
-          <div className={hasSlideImage ? "mt-auto space-y-2 text-left" : hasText ? "space-y-2" : "space-y-4"}>
+          <div className={hasSlideImage ? "space-y-2 text-left" : hasText ? "space-y-2" : "space-y-4"}>
             {view.role === "advisor"
               ? split.meta
                   .filter((block) => block.kind === "eyebrow")

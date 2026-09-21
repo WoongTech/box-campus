@@ -16,13 +16,12 @@ export function TabBar({
   onCompose: () => void;
 }) {
   return (
-    <nav className="absolute inset-x-0 bottom-0 z-30 border-t border-white/10 bg-black">
+    <nav className="absolute inset-x-0 bottom-0 z-30 border-t border-white/10 bg-black pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
       <div className="grid h-[52px] grid-cols-3">
         <TabButton label="홈" current={tab === "home"} onClick={onHome} name="home" />
         <TabButton label="추가" onClick={onCompose} name="plus" />
         <TabButton label="저장" current={tab === "saved"} onClick={onSaved} name="bookmark" />
       </div>
-      <div aria-hidden className="h-[max(0.5rem,env(safe-area-inset-bottom))]" />
     </nav>
   );
 }

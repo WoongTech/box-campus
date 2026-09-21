@@ -5,3 +5,33 @@
 @import "@astryxdesign/theme-neutral/theme.css";
 @import "@astryxdesign/core/tailwind-theme.css";
 @import "tailwindcss/utilities.css" layer(utilities);
+
+@layer utilities {
+  :root {
+    --app-top: 0px;
+    --app-height: 100%;
+    --tab-bar-height: calc(52px + max(0.5rem, env(safe-area-inset-bottom, 0px)));
+  }
+
+  html,
+  body {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    margin: 0;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+    background: #111111;
+  }
+
+  /* Sheets use 100dvh, which is not the visible PWA screen. */
+  dialog {
+    top: var(--app-top, 0px) !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: var(--app-height, 100%) !important;
+    max-height: none !important;
+  }
+}

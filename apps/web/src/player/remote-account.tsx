@@ -2,10 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@astryxdesign/core/Button";
-import { Text } from "@astryxdesign/core/Text";
-import { TextInput } from "@astryxdesign/core/TextInput";
-import { VStack } from "@astryxdesign/core/Layout";
 import { remoteConfigured, sendSignInLink, signOutRemote, subscribeAuth } from "./remote-sync";
 
 export function RemoteAccount() {
@@ -24,17 +20,22 @@ export function RemoteAccount() {
   if (!configured) return null;
 
   return (
-    <VStack gap={2}>
-      <Text type="supporting" color="secondary">
-        다른 기기
-      </Text>
+    <div className="flex flex-col gap-2">
+      <p className="text-[12px] text-secondary">다른 기기</p>
       {signedIn ? (
-        <VStack gap={2}>
-          <Text>{signedIn}</Text>
-          <Button variant="secondary" label="로그아웃" onClick={() => void signOutRemote()} />
-        </VStack>
+        <div className="flex flex-col gap-2">
+          <p className="truncate text-[15px]">{signedIn}</p>
+          <button
+            type="button"
+            className="h-12 w-full rounded-full border border-white/15 text-[15px] font-medium"
+            onClick={() => void signOutRemote()}
+          >
+            로그아웃
+          </button>
+        </div>
       ) : (
         <form
+          className="flex flex-col gap-2"
           onSubmit={(event) => {
             event.preventDefault();
             const address = email.trim();
@@ -53,21 +54,24 @@ export function RemoteAccount() {
             });
           }}
         >
-          <VStack gap={2}>
-            <TextInput
-              type="email"
-              label="이메일"
-              isLabelHidden
-              placeholder="이메일"
-              autoComplete="email"
-              value={email}
-              width="100%"
-              onChange={setEmail}
-            />
-            <Button type="submit" width="100%" label="로그인 링크 보내기" isLoading={sending} />
-          </VStack>
+          <input
+            type="email"
+            aria-label="이메일"
+            placeholder="이메일"
+            autoComplete="email"
+            value={email}
+            className="h-12 w-full rounded-full border border-white/15 bg-white/10 px-4 text-[15px] text-primary outline-none placeholder:text-secondary"
+            onChange={(event) => setEmail(event.target.value)}
+          />
+          <button
+            type="submit"
+            className="h-12 w-full rounded-full border border-white/15 text-[15px] font-medium disabled:opacity-50"
+            disabled={sending}
+          >
+            {sending ? "보내는 중" : "로그인 링크 보내기"}
+          </button>
         </form>
       )}
-    </VStack>
+    </div>
   );
 }

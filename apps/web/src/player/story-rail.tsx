@@ -11,7 +11,9 @@ export function StoryRail({
   onSelect?: (id: string) => void;
 }) {
   const { state, library, actions } = useCampus();
-  const ordered = [...library.order].sort((left, right) => {
+  const ordered = [...library.order];
+  if (!ordered.includes(state.campus.id)) ordered.unshift(state.campus.id);
+  ordered.sort((left, right) => {
     if (left === state.campus.id) return -1;
     if (right === state.campus.id) return 1;
     return 0;
@@ -20,7 +22,7 @@ export function StoryRail({
   return (
     <div className="flex items-start gap-3 overflow-x-auto px-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {ordered.map((id) => {
-        const name = titleOf(library.shelves[id], id);
+        const name = id === state.campus.id ? state.campus.title : titleOf(library.shelves[id], "스토리");
         const current = id === state.campus.id;
         return (
           <button
