@@ -4,7 +4,6 @@ import { use, useEffect, useMemo, useRef, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createContext } from "react";
 import { toast } from "sonner";
-import { Center } from "@astryxdesign/core/Center";
 import { Wordmark } from "./brand";
 import { PhoneFrame } from "./phone-frame";
 import {
@@ -457,10 +456,8 @@ export function CampusProvider({ children }: { children: ReactNode }) {
 
   if (!value) {
     return (
-      <PhoneFrame role="main">
-        <Center height="100%">
-          <Wordmark />
-        </Center>
+      <PhoneFrame role="main" className="flex items-center justify-center">
+        <Wordmark />
       </PhoneFrame>
     );
   }

@@ -1,37 +1,16 @@
-"use client";
-
-import type { ReactNode } from "react";
-import {
-  Layout,
-  LayoutContent,
-  VStack,
-  type LayoutContentProps,
-} from "@astryxdesign/core/Layout";
-
-/** Structural phone column. Astryx treats a numeric content width as pixels. */
-const PHONE_WIDTH = 390;
+import type { ComponentProps, ReactNode } from "react";
 
 export function PhoneFrame({
   children,
-  footer,
+  className,
   ...rest
-}: {
-  children: ReactNode;
-  footer?: ReactNode;
-} & Omit<LayoutContentProps, "children" | "padding" | "isScrollable">) {
+}: { children: ReactNode } & ComponentProps<"main">) {
   return (
-    <VStack width="min(100%, 390px)" height="100dvh" className="mx-auto bg-body text-primary">
-      <Layout
-        contentWidth={PHONE_WIDTH}
-        height="fill"
-        className="h-full min-h-0 w-full"
-        footer={footer}
-        content={
-          <LayoutContent padding={0} isScrollable={false} {...rest}>
-            {children}
-          </LayoutContent>
-        }
-      />
-    </VStack>
+    <main
+      className={`relative mx-auto h-dvh w-full max-w-[390px] overflow-hidden bg-body text-primary ${className ?? ""}`}
+      {...rest}
+    >
+      {children}
+    </main>
   );
 }

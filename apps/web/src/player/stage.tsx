@@ -98,16 +98,6 @@ export function Stage() {
   return (
     <PhoneFrame
       role="main"
-      footer={
-        showTabs ? (
-          <TabBar
-            tab={surface === "saved" ? "saved" : "home"}
-            onHome={() => setSurface("home")}
-            onSaved={() => setSurface("saved")}
-            onCompose={() => setComposeOpen(true)}
-          />
-        ) : undefined
-      }
       onClick={(event) => {
         if (interactionBlocked || isTextFieldFocused()) return;
         if (skipClick.current) {
@@ -172,6 +162,14 @@ export function Stage() {
           }}
         />
       )}
+      {showTabs ? (
+        <TabBar
+          tab={surface === "saved" ? "saved" : "home"}
+          onHome={() => setSurface("home")}
+          onSaved={() => setSurface("saved")}
+          onCompose={() => setComposeOpen(true)}
+        />
+      ) : null}
       <ComposeSheet
         open={composeOpen}
         onOpenChange={setComposeOpen}

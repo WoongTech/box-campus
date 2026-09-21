@@ -5,14 +5,3 @@
 @import "@astryxdesign/theme-neutral/theme.css";
 @import "@astryxdesign/core/tailwind-theme.css";
 @import "tailwindcss/utilities.css" layer(utilities);
-
-/* Astryx nowrap lines keep min-width:auto, so a long description paints past the row. */
-@layer utilities {
-  .astryx-list-item > :where(button, a) {
-    overflow: hidden;
-  }
-  .astryx-list-item > :where(button, a) > span {
-    min-width: 0;
-    max-width: 100%;
-  }
-}
