@@ -7,7 +7,7 @@ export function PhoneFrame({
 }: { children: ReactNode } & ComponentProps<"main">) {
   return (
     <main
-      className={`relative mx-auto h-dvh w-full max-w-[390px] overflow-hidden bg-body text-primary ${className ?? ""}`}
+      className={`relative mx-auto h-dvh w-full max-w-[430px] overflow-hidden bg-black text-primary ${className ?? ""}`}
       {...rest}
     >
       {children}

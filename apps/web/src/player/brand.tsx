@@ -1,3 +1,3 @@
 export function Wordmark() {
-  return <img src="/alter-wordmark.png" alt="alter" className="block h-5 w-auto" />;
+  return <img src="/alter-wordmark.png" alt="alter" className="block h-6 w-auto" />;
 }

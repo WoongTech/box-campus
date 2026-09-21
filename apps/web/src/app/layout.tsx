@@ -33,7 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
         />
       </head>
-      <body className="min-h-dvh bg-body text-primary">
+      <body className="min-h-dvh bg-black text-primary">
         <Providers>{children}</Providers>
       </body>
     </html>

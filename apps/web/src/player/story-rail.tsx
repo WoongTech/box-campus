@@ -1,6 +1,6 @@
 "use client";
 
-import { AppIcon, phoneIconSize } from "@/lib/icons";
+import { AppIcon } from "@/lib/icons";
 import { useCampus } from "./campus-provider";
 
 export function StoryRail({
@@ -18,7 +18,7 @@ export function StoryRail({
   });
 
   return (
-    <div className="flex items-start gap-4 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="flex items-start gap-3 overflow-x-auto px-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {ordered.map((id) => {
         const name = titleOf(library.shelves[id], id);
         const current = id === state.campus.id;
@@ -26,7 +26,7 @@ export function StoryRail({
           <button
             key={id}
             type="button"
-            className="flex w-[4.25rem] shrink-0 flex-col items-center gap-1.5"
+            className="flex w-16 shrink-0 flex-col items-center gap-1.5"
             aria-current={current ? "true" : undefined}
             onClick={() => {
               if (onSelect) onSelect(id);
@@ -51,11 +51,13 @@ export function StoryRail({
         );
       })}
       {onCompose ? (
-        <button type="button" className="flex w-[4.25rem] shrink-0 flex-col items-center gap-1.5" aria-label="추가" onClick={onCompose}>
-          <span className="flex size-[3.75rem] items-center justify-center text-primary">
-            <AppIcon name="plus" size={phoneIconSize.rail} />
+        <button type="button" className="flex w-16 shrink-0 flex-col items-center gap-1.5" aria-label="추가" onClick={onCompose}>
+          <span className="p-[2px]">
+            <span className="flex size-14 items-center justify-center rounded-full border border-white/25 text-primary">
+              <AppIcon name="plus" size={22} />
+            </span>
           </span>
-          <span className="text-[11px] text-secondary">추가</span>
+          <span className="text-[11px] leading-tight text-secondary">추가</span>
         </button>
       ) : null}
     </div>

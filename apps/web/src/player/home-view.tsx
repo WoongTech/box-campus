@@ -35,12 +35,12 @@ export function HomeView({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex justify-center border-b border-white/10 px-4 pt-[max(0.85rem,env(safe-area-inset-top))] pb-2.5">
+      <header className="flex shrink-0 items-center border-b border-white/10 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
         <h1 className="m-0 font-normal">
           <Wordmark />
         </h1>
       </header>
-      <div className="px-4 pt-4 pb-2">
+      <div className="shrink-0 pt-3 pb-2">
         <StoryRail
           onCompose={onCompose}
           onSelect={(id) => {
@@ -49,7 +49,7 @@ export function HomeView({
           }}
         />
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[calc(52px+max(0.75rem,env(safe-area-inset-bottom)))]">
         {posts.length === 0 ? (
           <button type="button" className="w-full px-6 py-16 text-center" onClick={onCompose}>
             <span className="block text-sm font-medium">아직 스토리가 없습니다</span>
@@ -61,7 +61,7 @@ export function HomeView({
             const format = post.format;
             return (
               <section key={post.id}>
-                <h2 className="px-4 pt-5 pb-1 text-sm font-semibold">{post.title}</h2>
+                <h2 className="px-4 pt-4 text-[15px] font-semibold tracking-tight">{post.title}</h2>
                 {active && showResume ? (
                   <button type="button" className="w-full px-4 py-3 text-left active:bg-white/5" onClick={onOpenStory}>
                     <span className="flex items-baseline justify-between gap-3">
@@ -79,7 +79,7 @@ export function HomeView({
                   return (
                     <div key={week.id}>
                       {heading ? (
-                        <h3 className="px-4 pt-6 pb-1 text-xs font-medium text-secondary">{heading}</h3>
+                        <h3 className="px-4 pt-4 text-[12px] font-medium text-secondary">{heading}</h3>
                       ) : null}
                       {week.ideaIds.length === 0 ? (
                         <button
@@ -102,7 +102,7 @@ export function HomeView({
                             <button
                               key={ideaId}
                               type="button"
-                              className={`w-full px-4 py-4 text-left active:bg-white/5 ${last ? "" : "border-b border-white/10"} ${current ? "bg-white/5" : ""}`}
+                              className={`w-full px-4 py-3.5 text-left active:bg-white/5 ${last ? "" : "border-b border-white/10"} ${current ? "bg-white/5" : ""}`}
                               onClick={() => onOpenIdea(post.id, ideaId)}
                             >
                               <span className="flex items-start gap-3">
@@ -160,10 +160,10 @@ export function SavedView({ onOpenCard }: { onOpenCard: (cardId: string) => void
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="border-b border-white/10 px-4 pt-[max(0.85rem,env(safe-area-inset-top))] pb-3">
-        <h1 className="text-base font-semibold tracking-tight">저장</h1>
+      <header className="flex shrink-0 items-center border-b border-white/10 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
+        <h1 className="text-[15px] font-semibold tracking-tight">저장</h1>
       </header>
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[calc(52px+max(0.75rem,env(safe-area-inset-bottom)))]">
         {items.length === 0 ? (
           <div className="flex flex-col items-center px-8 py-20 text-center">
             <AppIcon name="bookmark" size={phoneIconSize.empty} className="text-secondary" />
@@ -175,11 +175,11 @@ export function SavedView({ onOpenCard }: { onOpenCard: (cardId: string) => void
             <button
               key={item.cardId}
               type="button"
-              className="w-full border-b border-white/10 px-4 py-3 text-left active:bg-white/5"
+              className="w-full border-b border-white/10 px-4 py-3.5 text-left active:bg-white/5"
               onClick={() => onOpenCard(item.cardId)}
             >
               <span className="block truncate text-sm font-semibold">{item.topic}</span>
-              <span className="mt-1 line-clamp-3 block text-[15px] leading-relaxed">{item.text}</span>
+              <span className="mt-1 line-clamp-2 block text-[15px] leading-relaxed text-primary/90">{item.text}</span>
             </button>
           ))
         )}

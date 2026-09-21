@@ -30,11 +30,11 @@ export function FeedView({ onClose }: { onClose: () => void }) {
     <section className="relative flex h-full min-h-0 flex-col">
       {typeof view.pentadIndex === "number" ? (
         <div
-          className="pointer-events-none absolute inset-x-3 top-[max(0.65rem,env(safe-area-inset-top))] z-10 flex gap-1"
+          className="pointer-events-none absolute inset-x-3 top-[max(0.5rem,env(safe-area-inset-top))] z-10 flex gap-1"
           aria-hidden
         >
           {Array.from({ length: 4 }, (_, index) => (
-            <span key={index} className="h-[3px] flex-1 overflow-hidden rounded-full bg-white/25">
+            <span key={index} className="h-0.5 flex-1 overflow-hidden rounded-full bg-white/25">
               <span
                 className={`block h-full rounded-full bg-white ${index <= view.pentadIndex! ? "w-full" : "w-0"}`}
               />
@@ -44,7 +44,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
       ) : null}
 
       <div
-        className="absolute inset-x-3 top-[max(1.7rem,env(safe-area-inset-top)+1.05rem)] z-20 flex items-center gap-2"
+        className="absolute inset-x-3 top-[max(1.15rem,env(safe-area-inset-top)+0.7rem)] z-20 flex items-center gap-2"
         onClick={(event) => event.stopPropagation()}
       >
         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-xs font-semibold">
@@ -57,7 +57,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
         {meta.cardId ? (
           <button
             type="button"
-            className="flex size-11 items-center justify-center rounded-full"
+            className="flex size-10 items-center justify-center rounded-full"
             aria-label={meta.saved ? "저장됨" : "저장"}
             aria-pressed={meta.saved}
             onClick={actions.toggleSave}
@@ -67,7 +67,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
         ) : null}
         <button
           type="button"
-          className="flex size-11 shrink-0 items-center justify-center rounded-full"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full"
           aria-label={view.role === "advisor" ? "돌아가기" : "닫기"}
           onClick={() => {
             if (view.role === "advisor") {
@@ -84,8 +84,8 @@ export function FeedView({ onClose }: { onClose: () => void }) {
       <div
         key={`${frame.transitionId}-${nav}`}
         className={[
-          "flex min-h-0 flex-1 flex-col px-5 pt-[max(6.25rem,env(safe-area-inset-top)+5rem)]",
-          hasChoices || hasText ? "pb-3" : "pb-8",
+          "flex min-h-0 flex-1 flex-col px-6 pt-[max(5.25rem,env(safe-area-inset-top)+4.25rem)]",
+          hasChoices || hasText ? "pb-3" : "pb-[max(2rem,env(safe-area-inset-bottom))]",
         ].join(" ")}
       >
         <div
