@@ -47,7 +47,7 @@ export function StoryRail({
               </span>
             </span>
             <span className={`line-clamp-1 w-full text-center text-[11px] leading-tight ${current ? "font-semibold" : "text-secondary"}`}>
-              {name}
+              {shortLabel(name)}
             </span>
           </button>
         );
@@ -64,6 +64,12 @@ export function StoryRail({
       ) : null}
     </div>
   );
+}
+
+function shortLabel(name: string) {
+  const head = name.split(/[:：\-–—|]/)[0]?.trim() || name.trim();
+  if (head.length <= 8) return head;
+  return `${head.slice(0, 7)}…`;
 }
 
 function titleOf(raw: string | undefined, fallback: string) {
