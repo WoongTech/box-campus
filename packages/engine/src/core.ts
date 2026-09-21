@@ -640,7 +640,6 @@ function projectCardView(state, encounter) {
   if (card.provenance === "generated-draft") {
     blocks.push({ kind: "badge", text: "초안" });
   }
-  blocks.push({ kind: "eyebrow", text: idea ? idea.title : "" });
   if (card.image) {
     blocks.push({ kind: "image", src: card.image.src, alt: card.image.alt });
   }

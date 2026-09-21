@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { splitBlocks } from "./split-blocks";
 import { StoryRail } from "./story-rail";
 import { Wordmark } from "./brand";
 import { useCampus } from "./campus-provider";
@@ -25,10 +23,8 @@ export function HomeView({
   onOpenStory: () => void;
   onOpenIdea: (campusId: string, ideaId: string) => void;
 }) {
-  const { state, library, frame, actions } = useCampus();
+  const { state, library, actions } = useCampus();
   const posts = postsFromLibrary(library, state);
-  const liveLine =
-    frame.kind === "card" ? splitBlocks(frame.view.blocks).hero?.text ?? "" : "";
   const activeIdeaId = state.session.kind === "feed" ? state.session.feed.ideaId : "";
 
   return (
@@ -80,29 +76,24 @@ export function HomeView({
                         week.ideaIds.map((ideaId) => {
                           const idea = post.ideas.find((item) => item.id === ideaId);
                           const thesis = post.cards.find((card) => card.ideaId === ideaId && card.thesis)?.thesis;
-                          const cover = post.cards.find((card) => card.ideaId === ideaId && card.thesis && card.image?.src)?.image;
                           const title = idea?.title ?? "카드뉴스";
                           const current = active && ideaId === activeIdeaId;
-                          const line = current && liveLine ? liveLine : thesis;
                           return (
                             <button
                               key={ideaId}
                               type="button"
-                              className="w-full border-b border-white/10 px-4 py-4 text-left active:bg-white/5"
+                              className={`w-full border-b border-white/10 px-4 py-4 text-left active:bg-white/5 ${current ? "bg-white/5" : ""}`}
                               onClick={() => (current ? onOpenStory() : onOpenIdea(post.id, ideaId))}
                             >
-                              <span className="block min-w-0">
-                                  <span className="flex items-baseline justify-between gap-3">
-                                    <span className="min-w-0 truncate text-[15px] font-semibold">{title}</span>
-                                    {current ? <span className="shrink-0 text-[12px] text-secondary">이어서</span> : null}
-                                  </span>
-                                  {line ? (
-                                    <span className="mt-1 line-clamp-2 block text-[15px] leading-relaxed text-primary/80">
-                                      {line}
-                                    </span>
-                                  ) : null}
-                                  {cover ? <Cover src={cover.src} /> : null}
+                              <span className="flex items-baseline justify-between gap-3">
+                                <span className="min-w-0 truncate text-[15px] font-semibold">{title}</span>
+                                {current ? <span className="shrink-0 text-[12px] text-secondary">이어서</span> : null}
+                              </span>
+                              {thesis ? (
+                                <span className="mt-1 line-clamp-2 block text-[15px] leading-relaxed text-primary/80">
+                                  {thesis}
                                 </span>
+                              ) : null}
                             </button>
                           );
                         })
@@ -157,7 +148,6 @@ export function SavedView({ onOpenCard }: { onOpenCard: (cardId: string) => void
               ) : null}
               <span className="mt-0.5 block truncate text-[15px] font-semibold">{item.topic}</span>
               <span className="mt-1 line-clamp-2 block text-[15px] leading-relaxed text-primary/80">{item.text}</span>
-              {item.image ? <Cover src={item.image.src} /> : null}
             </button>
           ))
         )}
@@ -218,7 +208,7 @@ function postFromDump(id: string, raw: string): StoryPost | null {
   }
 }
 
-type SavedItem = { cardId: string; story: string; topic: string; text: string; image?: { src: string; alt: string } };
+type SavedItem = { cardId: string; story: string; topic: string; text: string };
 
 function cardLine(card: LooseCard) {
   return card.thesis || card.question || card.argument || card.analogy || "저장한 카드";
@@ -234,7 +224,7 @@ function previewSaved(
   const here = cards.find((card) => card.id === cardId);
   if (here) {
     const idea = ideas.find((item) => item.id === here.ideaId);
-    return { cardId, story: topic, topic: idea?.title ?? topic, text: cardLine(here), image: here.image };
+    return { cardId, story: topic, topic: idea?.title ?? topic, text: cardLine(here) };
   }
   for (const raw of Object.values(library.shelves)) {
     try {
@@ -249,27 +239,12 @@ function previewSaved(
         story: dumped.campus?.title ?? "저장한 카드",
         topic: idea?.title ?? dumped.campus?.title ?? "저장한 카드",
         text: cardLine(card),
-        image: card.image,
       };
     } catch {
       continue;
     }
   }
   return { cardId, story: "저장한 카드", topic: "저장한 카드", text: "다시 열 수 있는 카드" };
-}
-
-function Cover({ src }: { src: string }) {
-  const [visible, setVisible] = useState(true);
-  if (!visible) return null;
-  return (
-    <img
-      src={src}
-      alt=""
-      draggable={false}
-      className="mt-3 aspect-[3/2] w-full rounded-2xl bg-black object-contain"
-      onError={() => setVisible(false)}
-    />
-  );
 }
 
 function EmptyCopy({ title, detail, onClick }: { title: string; detail: string; onClick?: () => void }) {

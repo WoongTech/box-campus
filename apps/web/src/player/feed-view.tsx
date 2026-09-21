@@ -66,8 +66,10 @@ export function FeedView({ onClose }: { onClose: () => void }) {
           {state.campus.title.trim().slice(0, 1) || "스"}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-semibold leading-tight">{state.campus.title}</p>
-          {subtitle ? <p className="truncate text-[12px] text-secondary">{subtitle}</p> : null}
+          <p className="truncate text-[15px] font-semibold leading-tight">
+            {subtitle || state.campus.title}
+          </p>
+          {subtitle ? <p className="truncate text-[12px] text-secondary">{state.campus.title}</p> : null}
         </div>
         {meta.cardId ? (
           <button
@@ -77,7 +79,12 @@ export function FeedView({ onClose }: { onClose: () => void }) {
             aria-pressed={meta.saved}
             onClick={actions.toggleSave}
           >
-            <AppIcon name="bookmark" size={phoneIconSize.feed} className={meta.saved ? "text-primary" : "text-white/70"} />
+            <AppIcon
+              name="bookmark"
+              size={phoneIconSize.feed}
+              strokeWidth={meta.saved ? 2.4 : 1.6}
+              className={meta.saved ? "text-white" : "text-white/45"}
+            />
           </button>
         ) : null}
         <button
