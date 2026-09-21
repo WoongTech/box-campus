@@ -18,7 +18,7 @@ type FeedIdea = {
   ideaId: string;
   title: string;
   thesis: string;
-  weekLabel: string | null;
+  meta: string;
   current: boolean;
 };
 
@@ -35,6 +35,7 @@ export function HomeView({
   const activeIdeaId = state.session.kind === "feed" ? state.session.feed.ideaId : "";
   const post = activePost(state);
   const ideas = feedIdeas(post, activeIdeaId);
+  const initial = post.title.trim().slice(0, 1) || "스";
 
   return (
     <div className="flex h-full min-h-0 flex-col pb-[var(--tab-bar-height)]">
@@ -65,20 +66,25 @@ export function HomeView({
               <button
                 key={idea.ideaId}
                 type="button"
-                className={`w-full border-b border-white/10 px-4 py-4 text-left active:bg-white/5 ${idea.current ? "bg-white/5" : ""}`}
+                className={`flex w-full gap-3 border-b border-white/10 px-4 py-3.5 text-left active:bg-white/5 ${idea.current ? "bg-white/[0.04]" : ""}`}
                 onClick={() => (idea.current ? onOpenStory() : onOpenIdea(post.id, idea.ideaId))}
               >
-                <span className="flex items-center justify-between gap-3">
-                  <span className="min-w-0 truncate text-[13px] font-medium text-secondary">
-                    {idea.weekLabel ? `${idea.weekLabel} · ${idea.title}` : idea.title}
-                  </span>
-                  {idea.current ? <span className="shrink-0 text-[12px] text-secondary">이어서</span> : null}
+                <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
+                  {initial}
                 </span>
-                {idea.thesis ? (
-                  <span className="mt-1.5 line-clamp-3 block text-[15px] leading-relaxed text-primary">
-                    {idea.thesis}
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-baseline justify-between gap-3">
+                    <span className="min-w-0 truncate text-[13px]">
+                      <span className="font-semibold">{shortName(post.title)}</span>
+                      <span className="text-secondary"> · {idea.meta}</span>
+                    </span>
+                    {idea.current ? <span className="shrink-0 text-[12px] text-secondary">이어서</span> : null}
                   </span>
-                ) : null}
+                  <span className="mt-0.5 block truncate text-[12px] text-secondary">{idea.title}</span>
+                  {idea.thesis ? (
+                    <span className="mt-1.5 line-clamp-3 block break-keep text-[15px] leading-relaxed text-primary">{idea.thesis}</span>
+                  ) : null}
+                </span>
               </button>
             ))}
             <button
@@ -102,6 +108,7 @@ export function SavedView({ onOpenCard }: { onOpenCard: (cardId: string) => void
   const items = library.saved
     .map((cardId) => previewSaved(cardId, state.campus.title, cards, ideas, library))
     .filter((item): item is SavedItem => item !== null);
+  const initial = state.campus.title.trim().slice(0, 1) || "스";
 
   return (
     <div className="flex h-full min-h-0 flex-col pb-[var(--tab-bar-height)]">
@@ -116,14 +123,17 @@ export function SavedView({ onOpenCard }: { onOpenCard: (cardId: string) => void
             <button
               key={item.cardId}
               type="button"
-              className="w-full border-b border-white/10 px-4 py-4 text-left active:bg-white/5"
+              className="flex w-full gap-3 border-b border-white/10 px-4 py-3.5 text-left active:bg-white/5"
               onClick={() => onOpenCard(item.cardId)}
             >
-              {item.story !== item.topic ? (
-                <span className="block truncate text-[13px] font-medium text-secondary">{item.story}</span>
-              ) : null}
-              <span className="mt-0.5 block truncate text-[13px] text-secondary">{item.topic}</span>
-              <span className="mt-1.5 line-clamp-3 block text-[15px] leading-relaxed text-primary">{item.text}</span>
+              <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
+                {initial}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[13px] font-semibold">{shortName(item.story)}</span>
+                <span className="mt-0.5 block truncate text-[12px] text-secondary">{item.topic}</span>
+                <span className="mt-1.5 line-clamp-3 block text-[15px] leading-relaxed text-primary">{item.text}</span>
+              </span>
             </button>
           ))
         )}
@@ -162,13 +172,13 @@ function feedIdeas(post: StoryPost, activeIdeaId: string): FeedIdea[] {
     for (const ideaId of week.ideaIds) {
       const idea = post.ideas.find((item) => item.id === ideaId);
       const thesis = post.cards.find((card) => card.ideaId === ideaId && card.thesis)?.thesis ?? "";
-      const weekLabel =
-        post.format === "volume" ? null : post.format === "series" ? week.title : `${week.number}주`;
+      const meta =
+        post.format === "volume" ? "카드뉴스" : post.format === "series" ? week.title : `${week.number}주`;
       rows.push({
         ideaId,
         title: idea?.title ?? "카드뉴스",
         thesis,
-        weekLabel,
+        meta,
         current: ideaId === activeIdeaId,
       });
     }
@@ -176,6 +186,12 @@ function feedIdeas(post: StoryPost, activeIdeaId: string): FeedIdea[] {
   const current = rows.find((row) => row.current);
   if (!current) return rows;
   return [current, ...rows.filter((row) => row.ideaId !== current.ideaId)];
+}
+
+function shortName(name: string) {
+  const head = name.split(/[:：\-–—|]/)[0]?.trim() || name.trim();
+  if (head.length <= 14) return head;
+  return `${head.slice(0, 13)}…`;
 }
 
 type SavedItem = { cardId: string; story: string; topic: string; text: string };

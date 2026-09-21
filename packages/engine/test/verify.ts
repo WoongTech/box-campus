@@ -154,10 +154,9 @@ test("a wrong check keeps the explanation primary on reveal", () => {
   frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
   const title = frame.view.blocks.find((block) => block.kind === "title");
   assert.ok(title?.text.includes("반이"));
-  assert.ok(
-    frame.view.blocks.some(
-      (block) => block.kind === "body" && block.text === questionLine,
-    ),
+  assert.equal(
+    frame.view.blocks.some((block) => block.kind === "body" && block.text === questionLine),
+    false,
   );
   assert.equal(
     frame.view.blocks.some((block) => block.kind === "body" && block.text.startsWith("질문:")),

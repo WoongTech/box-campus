@@ -22,15 +22,14 @@ export function FeedView({ onClose }: { onClose: () => void }) {
     (block) => block.kind === "eyebrow" && block.text !== ideaTitle,
   );
   const showMetaInStrip = !hasChoices && split.meta.length > 0 && view.role !== "advisor";
-  const subtitle = ideaTitle;
   const showDock = hasChoices || hasText || view.role === "hub";
   const slide = `${frame.transitionId}`;
   const hidden = failed.slide === slide ? failed.srcs : [];
   const images = split.images.filter((block) => !hidden.includes(block.src));
-  const hasSlideImage = images.length > 0;
+  const hasSlideImage = images.length > 0 && !showDock;
   const readingLength =
     (split.hero?.text.length ?? 0) + split.reading.reduce((sum, block) => sum + block.text.length, 0);
-  const centered = !hasText && !hasSlideImage && readingLength < 80;
+  const centered = !hasText && !hasSlideImage && readingLength < 90;
 
   function hideImage(src: string) {
     setFailed((current) => {
@@ -39,8 +38,44 @@ export function FeedView({ onClose }: { onClose: () => void }) {
     });
   }
 
+  const copy = (
+    <>
+      {view.role === "advisor"
+        ? split.meta
+            .filter((block) => block.kind === "eyebrow")
+            .map((block, index) => (
+              <p key={`step-${index}`} className="text-[12px] font-medium text-secondary">
+                {block.text}
+              </p>
+            ))
+        : contextEyebrows.map((block, index) => (
+            <p key={`prompt-${index}`} className="text-[13px] font-medium text-secondary">
+              {block.text}
+            </p>
+          ))}
+      {split.verdict ? (
+        <p className={split.verdict.tone === "retry" ? "text-[13px] font-medium text-error" : "text-[13px] font-medium text-secondary"}>
+          {split.verdict.text}
+        </p>
+      ) : null}
+      {split.hero ? (
+        <Hero block={split.hero} centered={centered && !hasSlideImage} caption={hasSlideImage} />
+      ) : (
+        <h1 className="text-2xl leading-snug font-semibold tracking-tight text-balance">{state.campus.title}</h1>
+      )}
+      {split.reading.map((block, index) => (
+        <ReadingLine key={`${block.kind}-${index}`} block={block} centered={centered && !hasSlideImage} />
+      ))}
+      {showMetaInStrip
+        ? split.meta
+            .filter((block) => block.kind !== "eyebrow")
+            .map((block, index) => <MetaLine key={`${block.kind}-${index}`} block={block} centered={centered && !hasSlideImage} />)
+        : null}
+    </>
+  );
+
   return (
-    <section className="relative flex h-full min-h-0 flex-col">
+    <section className="relative flex h-full min-h-0 flex-col bg-black">
       {typeof view.pentadIndex === "number" ? (
         <div
           className="pointer-events-none flex shrink-0 gap-1 px-3 pt-[max(0.5rem,env(safe-area-inset-top))]"
@@ -59,17 +94,15 @@ export function FeedView({ onClose }: { onClose: () => void }) {
       )}
 
       <div
-        className="flex shrink-0 items-center gap-2 px-3 pt-2"
+        className="relative z-20 flex shrink-0 items-center gap-2 px-3 pt-2"
         onClick={(event) => event.stopPropagation()}
       >
         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-xs font-semibold">
           {state.campus.title.trim().slice(0, 1) || "스"}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-semibold leading-tight">
-            {subtitle || state.campus.title}
-          </p>
-          {subtitle ? <p className="truncate text-[12px] text-secondary">{state.campus.title}</p> : null}
+          <p className="truncate text-[14px] font-semibold leading-tight">{ideaTitle || state.campus.title}</p>
+          {ideaTitle ? <p className="truncate text-[11px] text-white/60">{state.campus.title}</p> : null}
         </div>
         {meta.cardId ? (
           <button
@@ -103,74 +136,46 @@ export function FeedView({ onClose }: { onClose: () => void }) {
         </button>
       </div>
 
-      <div
-        key={`${frame.transitionId}-${nav}`}
-        className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 ${showDock ? "" : "pb-[env(safe-area-inset-bottom)]"}`}
-      >
-        <div
-          className={
-            hasSlideImage
-              ? `flex min-h-full flex-col gap-3 py-4 ${showDock ? "" : "justify-center"}`
-              : hasText
-                ? "flex min-h-full flex-col justify-end gap-3 py-4"
-                : `flex min-h-full flex-col justify-center gap-4 py-6 ${centered ? "text-center" : ""}`
-          }
-        >
-          {hasSlideImage
-            ? images.map((block) => (
-                <div
-                  key={block.src}
-                  className={`-mx-6 flex w-[calc(100%+3rem)] items-center justify-center overflow-hidden bg-black ${showDock ? "aspect-video max-h-[32vh]" : "aspect-[4/5] max-h-[52vh]"}`}
-                >
-                  <img
-                    src={block.src}
-                    alt={block.alt}
-                    draggable={false}
-                    className="max-h-full max-w-full object-contain"
-                    onError={() => hideImage(block.src)}
-                  />
-                </div>
-              ))
-            : null}
-          <div className={hasSlideImage ? "space-y-2 text-left" : hasText ? "space-y-2" : "space-y-4"}>
-            {view.role === "advisor"
-              ? split.meta
-                  .filter((block) => block.kind === "eyebrow")
-                  .map((block, index) => (
-                    <p key={`step-${index}`} className="text-xs font-medium text-secondary">
-                      {block.text}
-                    </p>
-                  ))
-              : contextEyebrows.map((block, index) => (
-                  <p key={`prompt-${index}`} className="text-sm font-medium">
-                    {block.text}
-                  </p>
-                ))}
-            {split.hero ? (
-              <Hero block={split.hero} centered={centered} caption={hasSlideImage} />
-            ) : (
-              <h1 className="text-2xl leading-snug font-semibold tracking-tight text-balance">{state.campus.title}</h1>
-            )}
-            {split.verdict ? (
-              <p className={split.verdict.tone === "retry" ? "text-sm font-medium text-error" : "text-sm font-medium"}>
-                {split.verdict.text}
-              </p>
-            ) : null}
-            {split.reading.map((block, index) => (
-              <ReadingLine key={`${block.kind}-${index}`} block={block} centered={centered} />
-            ))}
-            {showMetaInStrip
-              ? split.meta
-                  .filter((block) => block.kind !== "eyebrow")
-                  .map((block, index) => <MetaLine key={`${block.kind}-${index}`} block={block} centered={centered} />)
-              : null}
+      {hasSlideImage ? (
+        <div key={`${frame.transitionId}-${nav}`} className="relative min-h-0 flex-1">
+          {images.map((block) => (
+            <img
+              key={block.src}
+              src={block.src}
+              alt={block.alt}
+              draggable={false}
+              className="absolute inset-0 size-full object-contain bg-black"
+              onError={() => hideImage(block.src)}
+            />
+          ))}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/90 to-transparent pt-28">
+            <div className="pointer-events-auto max-h-[42%] space-y-2 overflow-y-auto overscroll-contain px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+              {copy}
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div
+          key={`${frame.transitionId}-${nav}`}
+          className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 ${showDock ? "pb-3" : "pb-[max(1.5rem,env(safe-area-inset-bottom))]"}`}
+        >
+          <div
+            className={
+              hasText
+                ? "flex min-h-full flex-col justify-end gap-3 py-4"
+                : hasChoices
+                  ? "flex min-h-full flex-col justify-center gap-4 py-6"
+                  : `flex min-h-full flex-col gap-3 py-8 ${centered ? "justify-center text-center" : "justify-start"}`
+            }
+          >
+            {copy}
+          </div>
+        </div>
+      )}
 
       {showDock ? (
         <div
-          className="z-10 shrink-0 space-y-3 bg-body/90 px-4 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] backdrop-blur-sm"
+          className="z-10 shrink-0 space-y-2 border-t border-white/10 bg-black px-4 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))]"
           onClick={(event) => event.stopPropagation()}
         >
           {view.control.kind === "choices" ? (
@@ -224,7 +229,7 @@ function Hero({
   caption?: boolean;
 }) {
   const reading = caption
-    ? "text-base leading-relaxed"
+    ? "text-[15px] leading-relaxed"
     : block.text.length > 120
       ? "text-lg leading-relaxed"
       : block.text.length > 80
@@ -233,18 +238,18 @@ function Hero({
           ? "text-2xl leading-snug"
           : "text-3xl leading-snug";
   return (
-    <h1 className={`${reading} font-semibold tracking-tight text-balance ${centered ? "mx-auto max-w-[22rem]" : ""}`}>
+    <h1 className={`${reading} break-keep font-semibold tracking-tight text-balance ${centered ? "mx-auto max-w-[22rem]" : ""}`}>
       {block.text}
     </h1>
   );
 }
 
 function ReadingLine({ block, centered }: { block: Extract<Block, { text: string }>; centered: boolean }) {
-  return <p className={`text-base leading-relaxed text-primary/90 ${centered ? "mx-auto max-w-[22rem]" : ""}`}>{block.text}</p>;
+  return <p className={`break-keep text-[15px] leading-relaxed text-white/85 ${centered ? "mx-auto max-w-[22rem]" : ""}`}>{block.text}</p>;
 }
 
 function MetaLine({ block, centered }: { block: Extract<Block, { text: string }>; centered: boolean }) {
-  const className = `text-sm text-secondary ${centered ? "mx-auto max-w-[22rem]" : ""}`;
+  const className = `text-[13px] text-white/55 ${centered ? "mx-auto max-w-[22rem]" : ""}`;
   if (block.kind === "source" && block.href) {
     return (
       <a

@@ -690,7 +690,6 @@ function projectCardView(state, encounter) {
       if (encounter.verdict !== "correct" && picked) {
         blocks.push({ kind: "body", text: picked.label });
       }
-      blocks.push({ kind: "body", text: card.question });
       control = { kind: "advance", label: "다음" };
     }
   } else if (card.role === "editor") {
@@ -704,9 +703,9 @@ function projectCardView(state, encounter) {
         text: state.session.feed.bridgeHint,
       });
     }
-    blocks.push({ kind: "title", text: card.argument });
-    blocks.push({ kind: "body", text: card.holeLabel });
     if (encounter.phase === "hole") {
+      blocks.push({ kind: "title", text: card.argument });
+      blocks.push({ kind: "body", text: card.holeLabel });
       control = {
         kind: "choices",
         options: card.patches.map(function (p, idx) {
@@ -720,6 +719,7 @@ function projectCardView(state, encounter) {
         tone: encounter.verdict === "closed" ? "good" : "retry",
         text: encounter.verdict === "closed" ? "맞았습니다" : "다시 볼게요",
       });
+      blocks.push({ kind: "title", text: card.argument });
       if (patch && patch.explanation) {
         blocks.push({ kind: "body", text: patch.explanation });
       }
