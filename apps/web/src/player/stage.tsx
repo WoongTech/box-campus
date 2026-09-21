@@ -8,6 +8,7 @@ import { ComposeSheet } from "./compose-sheet";
 import { FeedView } from "./feed-view";
 import { HomeView, SavedView } from "./home-view";
 import { StripView } from "./strip-view";
+import { PhoneFrame } from "./phone-frame";
 import { TabBar } from "./tab-bar";
 
 const WHEEL_LOCK_MS = 450;
@@ -92,9 +93,21 @@ export function Stage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [interactionBlocked, fieldLocked, cardRole, actions, importOpen, frame, state]);
 
+  const showTabs = surface !== "story" && frame.kind !== "strip";
+
   return (
-    <main
-      className="relative mx-auto h-dvh w-full max-w-[390px] overflow-hidden bg-background"
+    <PhoneFrame
+      role="main"
+      footer={
+        showTabs ? (
+          <TabBar
+            tab={surface === "saved" ? "saved" : "home"}
+            onHome={() => setSurface("home")}
+            onSaved={() => setSurface("saved")}
+            onCompose={() => setComposeOpen(true)}
+          />
+        ) : undefined
+      }
       onClick={(event) => {
         if (interactionBlocked || isTextFieldFocused()) return;
         if (skipClick.current) {
@@ -159,14 +172,6 @@ export function Stage() {
           }}
         />
       )}
-      {surface !== "story" && frame.kind !== "strip" ? (
-        <TabBar
-          tab={surface === "saved" ? "saved" : "home"}
-          onHome={() => setSurface("home")}
-          onSaved={() => setSurface("saved")}
-          onCompose={() => setComposeOpen(true)}
-        />
-      ) : null}
       <ComposeSheet
         open={composeOpen}
         onOpenChange={setComposeOpen}
@@ -178,6 +183,6 @@ export function Stage() {
         }}
       />
       <ImportSheet open={importOpen} onOpenChange={setImportOpen} onImported={() => setSurface("story")} />
-    </main>
+    </PhoneFrame>
   );
 }

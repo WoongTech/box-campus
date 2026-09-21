@@ -4,7 +4,9 @@ import { use, useEffect, useMemo, useRef, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createContext } from "react";
 import { toast } from "sonner";
+import { Center } from "@astryxdesign/core/Center";
 import { Wordmark } from "./brand";
+import { PhoneFrame } from "./phone-frame";
 import {
   BOX_CAMPUS_SAMPLE,
   dumpState,
@@ -455,9 +457,11 @@ export function CampusProvider({ children }: { children: ReactNode }) {
 
   if (!value) {
     return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-[390px] flex-col items-center justify-center gap-4 bg-background px-6">
-        <Wordmark />
-      </main>
+      <PhoneFrame role="main">
+        <Center height="100%">
+          <Wordmark />
+        </Center>
+      </PhoneFrame>
     );
   }
   return <CampusContext value={value}>{children}</CampusContext>;

@@ -2,17 +2,32 @@
 
 import { useState } from "react";
 import { useForm } from "@tanstack/react-form";
-import { AppIcon, phoneIconSize } from "@/lib/icons";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
+import { AspectRatio } from "@astryxdesign/core/AspectRatio";
+import { Avatar } from "@astryxdesign/core/Avatar";
+import { Button } from "@astryxdesign/core/Button";
+import { Heading, type HeadingType } from "@astryxdesign/core/Heading";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import {
+  HStack,
+  Layout,
+  LayoutContent,
+  LayoutFooter,
+  LayoutHeader,
+  StackItem,
+  VStack,
+} from "@astryxdesign/core/Layout";
+import { Link } from "@astryxdesign/core/Link";
+import { ProgressBar } from "@astryxdesign/core/ProgressBar";
+import { Text } from "@astryxdesign/core/Text";
+import { TextInput } from "@astryxdesign/core/TextInput";
 import type { Block } from "@box-campus/engine";
+import { AppIcon, phoneIconSize } from "@/lib/icons";
 import { useCampus } from "./campus-provider";
 import { useFieldFocusLock } from "./interaction-lock";
 import { splitBlocks } from "./split-blocks";
 
 export function FeedView({ onClose }: { onClose: () => void }) {
-  const { state, frame, actions, meta, nav } = useCampus();
+  const { state, frame, actions, meta } = useCampus();
   if (frame.kind !== "card") return null;
   const view = frame.view;
   const split = splitBlocks(view.blocks);
@@ -35,208 +50,185 @@ export function FeedView({ onClose }: { onClose: () => void }) {
   const centered = !hasText && !hasSlideImage;
 
   return (
-    <section className="relative flex h-full min-h-0 flex-col">
-      {typeof view.pentadIndex === "number" ? (
-        <div
-          className="pointer-events-none absolute inset-x-3 top-[max(0.65rem,env(safe-area-inset-top))] z-10 flex gap-1"
-          aria-hidden
-        >
-          {Array.from({ length: 4 }, (_, index) => (
-            <Progress
-              key={index}
-              value={index <= view.pentadIndex! ? 100 : 0}
-              className="h-[3px] flex-1 overflow-hidden rounded-full bg-white/25 [&>div]:bg-white"
-            />
-          ))}
-        </div>
-      ) : null}
-
-      <div
-        className="absolute inset-x-3 top-[max(1.7rem,env(safe-area-inset-top)+1.05rem)] z-20 flex items-center gap-2"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-xs font-semibold">
-          {state.campus.title.trim().slice(0, 1) || "스"}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold leading-tight">{state.campus.title}</p>
-          {subtitle ? <p className="truncate text-[11px] text-white/70">{subtitle}</p> : null}
-        </div>
-        {meta.cardId ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-11 rounded-full"
-            aria-label={meta.saved ? "저장됨" : "저장"}
-            aria-pressed={meta.saved}
-            onClick={actions.toggleSave}
-          >
-            <AppIcon
-              name="bookmark"
-              size={phoneIconSize.feed}
-              className={meta.saved ? "text-foreground" : "text-muted-foreground"}
-            />
-          </Button>
-        ) : null}
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="size-11 shrink-0 rounded-full"
-          aria-label={view.role === "advisor" ? "돌아가기" : "닫기"}
-          onClick={() => {
-            if (view.role === "advisor") {
-              actions.dispatch({ kind: "cancel-advisor" });
-              return;
-            }
-            onClose();
-          }}
-        >
-          <AppIcon name="close" size={phoneIconSize.feed} />
-        </Button>
-      </div>
-
-      <div
-        key={frame.transitionId}
-        className={[
-          "flex min-h-0 flex-1 flex-col px-5 pt-[max(6.25rem,env(safe-area-inset-top)+5rem)]",
-          hasChoices || hasText ? "pb-3" : "pb-8",
-          "animate-in fade-in duration-300",
-          nav === "back" ? "slide-in-from-left-8" : "slide-in-from-right-8",
-        ].join(" ")}
-      >
-        <div
-          className={
-            hasSlideImage
-              ? "flex min-h-0 flex-1 flex-col gap-3"
-              : hasText
-                ? "flex min-h-0 flex-1 flex-col justify-end gap-3"
-                : "flex min-h-0 flex-1 flex-col justify-center gap-4 text-center"
-          }
-        >
-          {hasSlideImage
-            ? split.images.map((block) => (
-                <img
-                  key={block.src}
-                  src={block.src}
-                  alt={block.alt}
-                  className="w-full max-h-[min(52vh,28rem)] shrink-0 rounded-2xl object-cover"
-                />
-              ))
-            : null}
-          <div
-            className={
-              hasSlideImage
-                ? "mt-auto space-y-2 text-left"
-                : hasText
-                  ? "space-y-2"
-                  : "space-y-4"
-            }
-          >
-            {view.role === "advisor"
-              ? split.meta
-                  .filter((block) => block.kind === "eyebrow")
-                  .map((block, index) => (
-                    <p key={`step-${index}`} className="text-xs font-medium text-muted-foreground">
-                      {block.text}
-                    </p>
-                  ))
-              : contextEyebrows.map((block, index) => (
-                  <p key={`prompt-${index}`} className="text-sm font-medium text-foreground">
-                    {block.text}
-                  </p>
+    <Layout
+      height="fill"
+      className="h-full"
+      header={
+        <LayoutHeader>
+          <VStack gap={2}>
+            {typeof view.pentadIndex === "number" ? (
+              <HStack gap={1} aria-hidden>
+                {Array.from({ length: 4 }, (_, index) => (
+                  <StackItem key={index} size="fill">
+                    <ProgressBar
+                      label={`${index + 1}번째 슬라이드`}
+                      isLabelHidden
+                      value={index <= view.pentadIndex! ? 100 : 0}
+                      variant="neutral"
+                    />
+                  </StackItem>
                 ))}
-            {split.hero ? (
-              <Hero block={split.hero} centered={centered} caption={hasSlideImage} />
-            ) : (
-              <h1 className="text-2xl leading-snug font-semibold tracking-tight text-balance">
-                {state.campus.title}
-              </h1>
-            )}
-            {split.verdict ? (
-              <p
-                className={
-                  split.verdict.tone === "retry"
-                    ? "text-sm font-medium text-destructive"
-                    : "text-sm font-medium text-foreground"
-                }
-              >
-                {split.verdict.text}
-              </p>
+              </HStack>
             ) : null}
-            {split.reading.map((block, index) => (
-              <ReadingLine key={`${block.kind}-${index}`} block={block} centered={centered} />
-            ))}
-            {showMetaInStrip
-              ? split.meta
-                  .filter((block) => block.kind !== "eyebrow")
-                  .map((block, index) => (
-                    <MetaLine key={`${block.kind}-${index}`} block={block} centered={centered} />
-                  ))
-              : null}
-          </div>
-        </div>
-      </div>
-
-      {showDock ? (
-      <div
-        className="z-10 shrink-0 space-y-3 bg-background/90 px-4 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] backdrop-blur-sm supports-backdrop-filter:bg-background/75"
-        onClick={(event) => event.stopPropagation()}
-      >
-        {view.control.kind === "choices" ? (
-          <div className="flex flex-col gap-2">
-            {view.control.options.map((option) => (
-              <Button
-                key={option.actionId}
-                type="button"
-                variant="secondary"
-                className="h-auto min-h-12 w-full justify-start rounded-full px-4 py-3 text-left text-[15px] leading-snug whitespace-normal"
-                onClick={() =>
-                  actions.dispatch({
-                    kind: "activate",
-                    transitionId: frame.transitionId,
-                    actionId: option.actionId,
-                  })
-                }
-              >
-                {option.label}
-              </Button>
-            ))}
-          </div>
-        ) : null}
-
-        {view.control.kind === "text" ? (
-          <TextStep
-            key={frame.transitionId}
-            actionId={view.control.actionId}
-            label={view.control.label}
-            placeholder={view.control.placeholder}
-            maxLength={view.control.maxLength}
-            transitionId={frame.transitionId}
-          />
-        ) : null}
-
-        {view.role === "advisor" ? (
-          <Button
-            type="button"
-            variant="ghost"
-            className="min-h-11 w-full text-muted-foreground"
-            onClick={() => actions.dispatch({ kind: "cancel-advisor" })}
+            <HStack gap={2} align="center">
+              <Avatar name={state.campus.title} size="md" tooltip={false} />
+              <StackItem size="fill">
+                <Text display="block" weight="semibold" maxLines={1}>
+                  {state.campus.title}
+                </Text>
+                {subtitle ? (
+                  <Text display="block" type="supporting" color="secondary" maxLines={1}>
+                    {subtitle}
+                  </Text>
+                ) : null}
+              </StackItem>
+              {meta.cardId ? (
+                <IconButton
+                  label={meta.saved ? "저장됨" : "저장"}
+                  variant="ghost"
+                  icon={<AppIcon name="bookmark" size={phoneIconSize.feed} />}
+                  onClick={actions.toggleSave}
+                />
+              ) : null}
+              <IconButton
+                label={view.role === "advisor" ? "돌아가기" : "닫기"}
+                variant="ghost"
+                icon={<AppIcon name="close" size={phoneIconSize.feed} />}
+                onClick={() => {
+                  if (view.role === "advisor") {
+                    actions.dispatch({ kind: "cancel-advisor" });
+                    return;
+                  }
+                  onClose();
+                }}
+              />
+            </HStack>
+          </VStack>
+        </LayoutHeader>
+      }
+      footer={
+        showDock ? (
+          <LayoutFooter hasDivider>
+            <VStack gap={2}>
+              {view.control.kind === "choices" ? (
+                <VStack gap={2}>
+                  {view.control.options.map((option) => (
+                    <Button
+                      key={option.actionId}
+                      variant="secondary"
+                      width="100%"
+                      label={option.label}
+                      onClick={() =>
+                        actions.dispatch({
+                          kind: "activate",
+                          transitionId: frame.transitionId,
+                          actionId: option.actionId,
+                        })
+                      }
+                    />
+                  ))}
+                </VStack>
+              ) : null}
+              {view.control.kind === "text" ? (
+                <TextStep
+                  key={frame.transitionId}
+                  actionId={view.control.actionId}
+                  label={view.control.label}
+                  placeholder={view.control.placeholder}
+                  maxLength={view.control.maxLength}
+                  transitionId={frame.transitionId}
+                />
+              ) : null}
+              {view.role === "advisor" ? (
+                <Button
+                  variant="ghost"
+                  width="100%"
+                  label="돌아가기"
+                  onClick={() => actions.dispatch({ kind: "cancel-advisor" })}
+                />
+              ) : null}
+              {view.role === "hub" ? (
+                <Button variant="primary" width="100%" label="홈" onClick={onClose} />
+              ) : null}
+            </VStack>
+          </LayoutFooter>
+        ) : null
+      }
+      content={
+        <LayoutContent key={frame.transitionId}>
+          <VStack
+            height="100%"
+            gap={4}
+            justify={hasSlideImage ? "between" : centered ? "center" : "end"}
+            align={centered ? "center" : "stretch"}
           >
-            돌아가기
-          </Button>
-        ) : null}
-
-        {view.role === "hub" ? (
-          <Button type="button" className="min-h-11 w-full" onClick={onClose}>
-            홈
-          </Button>
-        ) : null}
-      </div>
-      ) : null}
-    </section>
+            {hasSlideImage ? (
+              <VStack gap={3}>
+                {split.images.map((block) => (
+                  <AspectRatio
+                    key={block.src}
+                    ratio={4 / 3}
+                    fit="cover"
+                    className="w-full overflow-hidden rounded-lg"
+                  >
+                    <img src={block.src} alt={block.alt} />
+                  </AspectRatio>
+                ))}
+              </VStack>
+            ) : null}
+            <VStack gap={2} align={centered ? "center" : "stretch"} maxWidth={centered ? "60ch" : undefined}>
+              {view.role === "advisor"
+                ? split.meta
+                    .filter((block) => block.kind === "eyebrow")
+                    .map((block, index) => (
+                      <Text key={`step-${index}`} type="supporting" weight="medium" color="secondary" display="block">
+                        {block.text}
+                      </Text>
+                    ))
+                : contextEyebrows.map((block, index) => (
+                    <Text key={`prompt-${index}`} weight="medium" display="block" justify={centered ? "center" : "start"}>
+                      {block.text}
+                    </Text>
+                  ))}
+              {split.hero ? (
+                <Hero block={split.hero} centered={centered} caption={hasSlideImage} />
+              ) : (
+                <Heading level={1} textWrap="balance" justify={centered ? "center" : "start"}>
+                  {state.campus.title}
+                </Heading>
+              )}
+              {split.verdict ? (
+                <Text
+                  display="block"
+                  weight="medium"
+                  justify={centered ? "center" : "start"}
+                  className={split.verdict.tone === "retry" ? "text-error" : undefined}
+                >
+                  {split.verdict.text}
+                </Text>
+              ) : null}
+              {split.reading.map((block, index) => (
+                <ReadingLine key={`${block.kind}-${index}`} block={block} centered={centered} />
+              ))}
+              {showMetaInStrip
+                ? split.meta
+                    .filter((block) => block.kind !== "eyebrow")
+                    .map((block, index) => (
+                      <MetaLine key={`${block.kind}-${index}`} block={block} centered={centered} />
+                    ))
+                : null}
+            </VStack>
+          </VStack>
+        </LayoutContent>
+      }
+    />
   );
+}
+
+function heroType(text: string, caption: boolean): HeadingType | undefined {
+  if (caption || text.length > 80) return undefined;
+  if (text.length > 36) return "display-3";
+  return "display-2";
 }
 
 function Hero({
@@ -248,50 +240,44 @@ function Hero({
   centered: boolean;
   caption?: boolean;
 }) {
-  const reading = caption
-    ? "text-base leading-relaxed"
-    : block.text.length > 120
-      ? "text-lg leading-relaxed"
-      : block.text.length > 80
-        ? "text-xl leading-relaxed"
-        : block.text.length > 36
-          ? "text-2xl leading-snug"
-          : "text-3xl leading-snug";
   return (
-    <h1
-      className={`${reading} font-semibold tracking-tight text-balance ${centered ? "mx-auto max-w-[22rem]" : ""}`}
+    <Heading
+      level={caption ? 2 : 1}
+      type={heroType(block.text, caption)}
+      textWrap="balance"
+      justify={centered ? "center" : "start"}
     >
       {block.text}
-    </h1>
+    </Heading>
   );
 }
 
 function ReadingLine({ block, centered }: { block: Extract<Block, { text: string }>; centered: boolean }) {
   return (
-    <p
-      className={`text-base leading-relaxed text-foreground/90 ${centered ? "mx-auto max-w-[22rem]" : ""}`}
-    >
+    <Text display="block" justify={centered ? "center" : "start"}>
       {block.text}
-    </p>
+    </Text>
   );
 }
 
 function MetaLine({ block, centered }: { block: Extract<Block, { text: string }>; centered: boolean }) {
-  const className = `text-sm text-muted-foreground ${centered ? "mx-auto max-w-[22rem]" : ""}`;
   if (block.kind === "source" && block.href) {
     return (
-      <a
+      <Link
         href={block.href}
         target="_blank"
         rel="noopener noreferrer"
-        className={`${className} underline underline-offset-2`}
         onClick={(event) => event.stopPropagation()}
       >
         {block.text}
-      </a>
+      </Link>
     );
   }
-  return <p className={className}>{block.text}</p>;
+  return (
+    <Text type="supporting" color="secondary" display="block" justify={centered ? "center" : "start"}>
+      {block.text}
+    </Text>
+  );
 }
 
 function TextStep({
@@ -324,32 +310,31 @@ function TextStep({
 
   return (
     <form
-      className="flex flex-col gap-2"
       onSubmit={(event) => {
         event.preventDefault();
         void form.handleSubmit();
       }}
     >
-      <form.Field name="value">
-        {(field) => (
-          <Input
-            value={field.state.value}
-            maxLength={maxLength}
-            placeholder={placeholder}
-            enterKeyHint="done"
-            className="min-h-11"
-            onFocus={() => setFocused(true)}
-            onBlur={() => {
-              setFocused(false);
-              field.handleBlur();
-            }}
-            onChange={(event) => field.handleChange(event.target.value)}
-          />
-        )}
-      </form.Field>
-      <Button type="submit" className="min-h-11">
-        {label}
-      </Button>
+      <VStack gap={2}>
+        <form.Field name="value">
+          {(field) => (
+            <TextInput
+              label={label}
+              isLabelHidden
+              value={field.state.value}
+              placeholder={placeholder}
+              width="100%"
+              onFocus={() => setFocused(true)}
+              onBlur={() => {
+                setFocused(false);
+                field.handleBlur();
+              }}
+              onChange={(value) => field.handleChange(value.slice(0, maxLength))}
+            />
+          )}
+        </form.Field>
+        <Button type="submit" width="100%" label={label} />
+      </VStack>
     </form>
   );
 }

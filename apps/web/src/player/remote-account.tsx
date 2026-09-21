@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@astryxdesign/core/Button";
+import { Text } from "@astryxdesign/core/Text";
+import { TextInput } from "@astryxdesign/core/TextInput";
+import { VStack } from "@astryxdesign/core/Layout";
 import { remoteConfigured, sendSignInLink, signOutRemote, subscribeAuth } from "./remote-sync";
 
 export function RemoteAccount() {
@@ -22,18 +24,17 @@ export function RemoteAccount() {
   if (!configured) return null;
 
   return (
-    <div className="mt-3">
-      <p className="text-xs font-medium text-muted-foreground">다른 기기</p>
+    <VStack gap={2}>
+      <Text type="supporting" color="secondary">
+        다른 기기
+      </Text>
       {signedIn ? (
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <p className="truncate text-sm">{signedIn}</p>
-          <Button type="button" variant="secondary" className="min-h-11 shrink-0" onClick={() => void signOutRemote()}>
-            로그아웃
-          </Button>
-        </div>
+        <VStack gap={2}>
+          <Text>{signedIn}</Text>
+          <Button variant="secondary" label="로그아웃" onClick={() => void signOutRemote()} />
+        </VStack>
       ) : (
         <form
-          className="mt-3 flex flex-col gap-2"
           onSubmit={(event) => {
             event.preventDefault();
             const address = email.trim();
@@ -52,20 +53,21 @@ export function RemoteAccount() {
             });
           }}
         >
-          <Input
-            type="email"
-            inputMode="email"
-            autoComplete="email"
-            placeholder="이메일"
-            value={email}
-            className="min-h-11"
-            onChange={(event) => setEmail(event.target.value)}
-          />
-          <Button type="submit" className="min-h-11" disabled={sending}>
-            로그인 링크 보내기
-          </Button>
+          <VStack gap={2}>
+            <TextInput
+              type="email"
+              label="이메일"
+              isLabelHidden
+              placeholder="이메일"
+              autoComplete="email"
+              value={email}
+              width="100%"
+              onChange={setEmail}
+            />
+            <Button type="submit" width="100%" label="로그인 링크 보내기" isLoading={sending} />
+          </VStack>
         </form>
       )}
-    </div>
+    </VStack>
   );
 }

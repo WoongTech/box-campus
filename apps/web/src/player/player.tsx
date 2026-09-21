@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { CampusProvider } from "./campus-provider";
 import { InteractionLockProvider } from "./interaction-lock";
+import { Center } from "@astryxdesign/core/Center";
 import { Wordmark } from "./brand";
+import { PhoneFrame } from "./phone-frame";
 import { Stage } from "./stage";
 
 export function Player() {
@@ -13,9 +15,11 @@ export function Player() {
   }, []);
   if (!ready) {
     return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-[390px] flex-col items-center justify-center gap-4 bg-background px-6">
-        <Wordmark />
-      </main>
+      <PhoneFrame role="main">
+        <Center height="100%">
+          <Wordmark />
+        </Center>
+      </PhoneFrame>
     );
   }
   return (

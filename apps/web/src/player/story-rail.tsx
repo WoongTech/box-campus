@@ -1,5 +1,9 @@
 "use client";
 
+import { Avatar } from "@astryxdesign/core/Avatar";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { HStack, VStack } from "@astryxdesign/core/Layout";
+import { Text } from "@astryxdesign/core/Text";
 import { AppIcon, phoneIconSize } from "@/lib/icons";
 import { useCampus } from "./campus-provider";
 
@@ -18,47 +22,37 @@ export function StoryRail({
   });
 
   return (
-    <div className="flex items-start gap-4 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <HStack gap={3} align="start" className="w-full min-w-0 overflow-x-auto">
       {ordered.map((id) => {
         const name = titleOf(library.shelves[id], id);
         const current = id === state.campus.id;
         return (
-          <button
-            key={id}
-            type="button"
-            className="flex w-[4.25rem] shrink-0 flex-col items-center gap-1.5"
-            aria-current={current ? "true" : undefined}
-            onClick={() => {
-              if (onSelect) onSelect(id);
-              else if (!current) actions.openAccount(id);
-            }}
-          >
-            <span
-              className={`rounded-full p-[2px] ${
-                current
-                  ? "bg-[conic-gradient(from_210deg,#f9ce34,#ee2a7b,#6228d7,#f9ce34)]"
-                  : "bg-white/25"
-              }`}
-            >
-              <span className="flex size-14 items-center justify-center rounded-full bg-background text-base font-semibold">
-                {name.trim().slice(0, 1) || "스"}
-              </span>
-            </span>
-            <span className={`line-clamp-1 w-full text-center text-[11px] leading-tight ${current ? "font-semibold" : "text-muted-foreground"}`}>
+          <VStack key={id} gap={1} align="center">
+            <Avatar
+              name={name}
+              size="lg"
+              tooltip={name}
+              aria-current={current ? "true" : undefined}
+              onClick={() => {
+                if (onSelect) onSelect(id);
+                else if (!current) actions.openAccount(id);
+              }}
+            />
+            <Text type="supporting" weight={current ? "semibold" : "normal"}>
               {name}
-            </span>
-          </button>
+            </Text>
+          </VStack>
         );
       })}
       {onCompose ? (
-        <button type="button" className="flex w-[4.25rem] shrink-0 flex-col items-center gap-1.5" aria-label="추가" onClick={onCompose}>
-          <span className="flex size-[3.75rem] items-center justify-center text-foreground">
-            <AppIcon name="plus" size={phoneIconSize.rail} />
-          </span>
-          <span className="text-[11px] text-muted-foreground">추가</span>
-        </button>
+        <VStack gap={1} align="center">
+          <IconButton label="추가" variant="ghost" icon={<AppIcon name="plus" size={phoneIconSize.rail} />} onClick={onCompose} />
+          <Text type="supporting" color="secondary">
+            추가
+          </Text>
+        </VStack>
       ) : null}
-    </div>
+    </HStack>
   );
 }
 

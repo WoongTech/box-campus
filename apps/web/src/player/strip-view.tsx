@@ -1,57 +1,65 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@astryxdesign/core/Button";
+import { Heading } from "@astryxdesign/core/Heading";
+import { Layout, LayoutContent, LayoutFooter, LayoutHeader, VStack } from "@astryxdesign/core/Layout";
+import { List, ListItem } from "@astryxdesign/core/List";
+import { Text } from "@astryxdesign/core/Text";
 import { useCampus } from "./campus-provider";
 
 export function StripView() {
   const { frame, actions } = useCampus();
   if (frame.kind !== "strip") return null;
+  const format = frame.campus.format;
 
   return (
-    <div className="flex h-dvh flex-col">
-      <div className="flex-1 overflow-y-auto overscroll-contain">
-        <div className="space-y-3 px-4 pt-[max(1.25rem,env(safe-area-inset-top))] pb-6">
-          <div>
-            <p className="text-xs text-muted-foreground">주 보기</p>
-            <h1 className="mt-1 text-xl font-semibold tracking-tight">{frame.title}</h1>
-          </div>
-          {frame.weeks.map((week) => {
-            const empty = week.ideaIds.length === 0;
-            return (
-              <article
-                key={week.id}
-                className={
-                  empty
-                    ? "rounded-xl border border-dashed border-border/70 px-4 py-4"
-                    : "rounded-xl border border-border/60 bg-card/40 px-4 py-4"
-                }
-              >
-                <h2 className="text-base font-semibold tracking-tight">
-                  {frame.campus.format === "course"
-                    ? `${week.number}주 · ${week.title}`
-                    : week.title}
-                </h2>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{week.promise}</p>
-                {empty ? (
-                  <p className="mt-3 text-xs text-muted-foreground/80">아직 이 주에 장이 없습니다</p>
-                ) : (
-                  <p className="mt-3 text-xs text-muted-foreground">장 {week.ideaIds.length}개</p>
-                )}
-              </article>
-            );
-          })}
-        </div>
-      </div>
-      <div className="shrink-0 border-t border-border/40 px-4 py-3 pb-[max(0.85rem,env(safe-area-inset-bottom))]">
-        <Button
-          type="button"
-          variant="secondary"
-          className="min-h-11 w-full"
-          onClick={() => actions.dispatch({ kind: "close-strip", transitionId: frame.transitionId })}
-        >
-          이어보기
-        </Button>
-      </div>
-    </div>
+    <Layout
+      height="fill"
+      className="h-full"
+      header={
+        <LayoutHeader>
+          <VStack gap={1}>
+            <Text type="supporting" color="secondary">
+              주 보기
+            </Text>
+            <Heading level={1}>{frame.title}</Heading>
+          </VStack>
+        </LayoutHeader>
+      }
+      footer={
+        <LayoutFooter hasDivider>
+          <Button
+            variant="secondary"
+            width="100%"
+            label="이어보기"
+            onClick={() => actions.dispatch({ kind: "close-strip", transitionId: frame.transitionId })}
+          />
+        </LayoutFooter>
+      }
+      content={
+        <LayoutContent>
+          <List hasDividers>
+            {frame.weeks.map((week) => {
+              const empty = week.ideaIds.length === 0;
+              const label = format === "course" ? `${week.number}주 · ${week.title}` : week.title;
+              return (
+                <ListItem
+                  key={week.id}
+                  label={label}
+                  description={
+                    week.promise ? <Text color="secondary">{week.promise}</Text> : undefined
+                  }
+                  endContent={
+                    <Text type="supporting" color="secondary">
+                      {empty ? "아직 이 주에 장이 없습니다" : `장 ${week.ideaIds.length}개`}
+                    </Text>
+                  }
+                />
+              );
+            })}
+          </List>
+        </LayoutContent>
+      }
+    />
   );
 }
