@@ -469,11 +469,15 @@ test("a card can carry an https image and rejects other addresses", () => {
   const cards = sample.cards.map((card) =>
     card.id === "lib-a"
       ? { ...card, image: { src: "https://example.com/frame.jpg", alt: "노출 삼각형 도식" } }
-      : card,
+      : card.id === "room-a"
+        ? { ...card, image: { src: "https://example.com/stock.jpg", alt: "장식 사진" } }
+        : card,
   );
   const campus = parseCampus({ ...sample, cards });
   const card = campus.cards.find((item) => item.id === "lib-a") as { image?: { alt: string } };
   assert.equal(card.image?.alt, "노출 삼각형 도식");
+  const roommate = campus.cards.find((item) => item.id === "room-a") as { image?: { alt: string } };
+  assert.equal(roommate.image, undefined);
   let state = createInitialState({ ...sample, cards }, FIXED_NOW);
   state = { ...state, progress: { ...state.progress, dailyGoal: 40 } };
   const frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));

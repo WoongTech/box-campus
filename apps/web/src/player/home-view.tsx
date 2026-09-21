@@ -80,7 +80,7 @@ export function HomeView({
                         week.ideaIds.map((ideaId) => {
                           const idea = post.ideas.find((item) => item.id === ideaId);
                           const thesis = post.cards.find((card) => card.ideaId === ideaId && card.thesis)?.thesis;
-                          const cover = post.cards.find((card) => card.ideaId === ideaId && card.image?.src)?.image;
+                          const cover = post.cards.find((card) => card.ideaId === ideaId && card.thesis && card.image?.src)?.image;
                           const title = idea?.title ?? "카드뉴스";
                           const current = active && ideaId === activeIdeaId;
                           const line = current && liveLine ? liveLine : thesis;

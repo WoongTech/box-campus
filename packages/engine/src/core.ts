@@ -303,7 +303,7 @@ function parseCampus(raw) {
       throw "캠퍼스 묶음: 알 수 없는 카드 역할입니다.";
     }
     var image = optionalImage(c);
-    if (image) cards[cards.length - 1].image = image;
+    if (image && c.role === "librarian") cards[cards.length - 1].image = image;
   }
 
   var listedWeekByIdea = {};
@@ -886,7 +886,8 @@ function buildAuthorBrief(answers) {
     "",
     "위 설정으로 묶음을 만드세요. format은 course, volume, series 중 주제에 맞는 것.",
     "아이디어마다 네 장: 핵심 문장, 질문, 고칠 문장, 다른 분야 비유.",
-    "확인한 https 사진만 image에 넣으세요. 사실을 지어내지 마세요.",
+    "사진은 기본으로 넣지 마세요. 문장이 가리키는 도식·표·원문 캡처만 image에 넣으세요.",
+    "장식 사진과 무관한 스크린샷은 빼세요. 사실을 지어내지 마세요.",
   ].join("\n");
 }
 

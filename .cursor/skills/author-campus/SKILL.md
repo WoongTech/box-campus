@@ -17,15 +17,15 @@ box-campus 플레이어용 **스토리**(주제 묶음)를 만듭니다. 플레�
 4. `format`은 `course`, `volume`, `series`입니다. 없으면 6주 `course`입니다. `volume`은 부분 1개, `series`는 1개 이상의 편입니다.
 5. 각 아이디어(카드뉴스 한 편)는 사서 → 튜터 → 에디터 → 룸메이트 네 슬라이드다. 읽는 순서는 고정이다. 조언자 슬라이드는 넣지 않는다. 조언자는 플레이어의 네 결정이다.
 6. 하루 분량·멈춤 필드는 넣지 않는다. 학습자는 네 장 리듬으로만 넘긴다.
-7. 확인한 https 사진만 슬라이드 `image: { src, alt }`로 넣는다. 주소를 지어내지 않는다. 핵심·비유 슬라이드에 두는 것이 자연스럽다.
+7. 사진은 기본으로 넣지 않는다. 핵심 슬라이드에만, 문장이 가리키는 도식·표·원문 캡처를 `image: { src, alt }`로 넣는다. 질문·비유 슬라이드와 장식용 스톡·발표 제목·무관한 스크린샷은 넣지 않는다. 주소를 지어내지 않는다.
 8. 문장은 한국어입니다. 인용·출처를 지어내지 않습니다. `source.label`은 검증 가능한 설명만 씁니다.
 9. 완성 후 사용자에게 플레이어 **묶음 붙이기**에 넣도록 안내합니다.
 
 ## 카드 규칙
 
-- **사서**: `thesis`, `source: { label, href }`, 선택 `image`
+- **사서**: `thesis`, `source: { label, href }`, 드물게 `image`(문장이 가리키는 도식만)
 - **튜터**: `question`, `choices[]`, `correctIndex`, `reveal`
 - **에디터**: `thesis`, `holeLabel`, `patches[]`, `correctIndex`, `reveal`
-- **룸메이트**: `foreignField`, `analogy`, `analogyLimit`, 선택 `image`
+- **룸메이트**: `foreignField`, `analogy`, `analogyLimit`
 
 `provenance: "authored"` unless the user explicitly asked for a draft scaffold.
