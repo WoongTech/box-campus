@@ -30,10 +30,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <style
           dangerouslySetInnerHTML={{
             __html: `
-html,body{background:#000;margin:0;height:100%;height:100dvh;overflow:hidden}
-.app-sat{padding-top:constant(safe-area-inset-top);padding-top:env(safe-area-inset-top,0px);padding-top:calc(0.35rem + max(env(safe-area-inset-top,0px),var(--sat,0px)))!important}
-.app-sab{padding-bottom:constant(safe-area-inset-bottom);padding-bottom:env(safe-area-inset-bottom,0px);padding-bottom:calc(0.5rem + max(env(safe-area-inset-bottom,0px),var(--sab,0px)))!important}
-.app-tabbar{padding-bottom:constant(safe-area-inset-bottom);padding-bottom:env(safe-area-inset-bottom,0px);padding-bottom:calc(0.5rem + max(env(safe-area-inset-bottom,0px),var(--sab,0px)))!important}
+:root{--sat:0px;--sab:0px}
+@supports (-webkit-touch-callout:none){@media (pointer:coarse) and (max-width:550px){:root{--sab:34px}}}
+@media (display-mode:standalone),(display-mode:fullscreen){@supports (-webkit-touch-callout:none){@media (pointer:coarse) and (max-width:550px){:root{--sat:47px;--sab:34px}}}}
+html,body{background:#000;margin:0;position:fixed;inset:0;width:100%;height:100%;overflow:hidden}
+.app-sat{padding-top:0.35rem;padding-top:calc(0.35rem + env(safe-area-inset-top,0px));padding-top:calc(0.35rem + max(env(safe-area-inset-top,0px),var(--sat,0px)))!important}
+.app-sab{padding-bottom:0.5rem;padding-bottom:calc(0.5rem + env(safe-area-inset-bottom,0px));padding-bottom:calc(0.5rem + max(env(safe-area-inset-bottom,0px),var(--sab,0px)))!important}
+.app-tabbar{padding-bottom:0.5rem;padding-bottom:calc(0.5rem + env(safe-area-inset-bottom,0px));padding-bottom:calc(0.5rem + max(env(safe-area-inset-bottom,0px),var(--sab,0px)))!important}
 `,
           }}
         />
