@@ -20,7 +20,7 @@ export function StoryRail({
   });
 
   return (
-    <div className="flex items-start gap-3.5 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="flex items-start gap-3.5 overflow-x-auto px-4 pb-1 pe-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {ordered.map((id) => {
         const name = id === state.campus.id ? state.campus.title : titleOf(library.shelves[id], "스토리");
         const current = id === state.campus.id;

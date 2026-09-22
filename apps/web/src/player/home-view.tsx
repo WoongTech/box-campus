@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { StoryRail } from "./story-rail";
 import { Wordmark } from "./brand";
 import { useCampus } from "./campus-provider";
@@ -22,6 +23,12 @@ type FeedIdea = {
   current: boolean;
 };
 
+type FeedSection = {
+  key: string;
+  label: string;
+  ideas: FeedIdea[];
+};
+
 export function HomeView({
   onCompose,
   onOpenStory,
@@ -32,9 +39,11 @@ export function HomeView({
   onOpenIdea: (campusId: string, ideaId: string) => void;
 }) {
   const { state, actions } = useCampus();
+  const [resetArmed, setResetArmed] = useState(false);
   const activeIdeaId = state.session.kind === "feed" ? state.session.feed.ideaId : "";
   const post = activePost(state);
-  const ideas = feedIdeas(post, activeIdeaId);
+  const sections = feedSections(post, activeIdeaId);
+  const ideaCount = sections.reduce((sum, section) => sum + section.ideas.length, 0);
   const initial = post.title.trim().slice(0, 1) || "스";
   const handle = shortName(post.title);
 
@@ -55,51 +64,68 @@ export function HomeView({
         />
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain border-t border-white/[0.08]">
-        {ideas.length === 0 ? (
+        {ideaCount === 0 ? (
           <EmptyCopy title="아직 글이 없습니다" detail="추가로 이 스토리를 채우세요." onClick={onCompose} />
         ) : (
           <section>
             <h2 className="sr-only">{post.title}</h2>
-            {ideas.map((idea) => (
-              <button
-                key={idea.ideaId}
-                type="button"
-                className={`flex w-full gap-3 border-b border-white/[0.08] px-4 py-3.5 text-left active:bg-white/[0.03] ${
-                  idea.current ? "bg-white/[0.03]" : ""
-                }`}
-                onClick={() => (idea.current ? onOpenStory() : onOpenIdea(post.id, idea.ideaId))}
-              >
-                <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
-                  {initial}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-2">
-                    <span className="min-w-0 flex-1 truncate text-[15px] leading-5">
-                      <span className="font-semibold text-primary">{handle}</span>
-                      <span className="text-secondary"> · {idea.meta}</span>
+            {sections.map((section) => (
+              <div key={section.key}>
+                {section.label ? (
+                  <p className="px-4 pt-4 pb-1 text-[13px] font-medium text-secondary">{section.label}</p>
+                ) : null}
+                {section.ideas.map((idea) => (
+                  <button
+                    key={idea.ideaId}
+                    type="button"
+                    className={`flex w-full gap-3 border-b border-white/[0.08] px-4 py-3.5 text-left active:bg-white/[0.03] ${
+                      idea.current ? "bg-white/[0.03]" : ""
+                    }`}
+                    onClick={() => (idea.current ? onOpenStory() : onOpenIdea(post.id, idea.ideaId))}
+                  >
+                    <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
+                      {initial}
                     </span>
-                    {idea.current ? (
-                      <span className="shrink-0 text-[13px] font-medium text-secondary">이어서</span>
-                    ) : null}
-                  </span>
-                  <span className="mt-1.5 block break-keep text-[15px] leading-relaxed text-primary">
-                    <span className="font-semibold">{idea.title}</span>
-                    {idea.thesis ? (
-                      <>
-                        <span className="whitespace-pre-wrap">{"\n"}</span>
-                        <span className="line-clamp-5 font-normal">{idea.thesis}</span>
-                      </>
-                    ) : null}
-                  </span>
-                </span>
-              </button>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-2">
+                        <span className="min-w-0 flex-1 truncate text-[15px] leading-5">
+                          <span className="font-semibold text-primary">{handle}</span>
+                          <span className="text-secondary"> · {idea.meta}</span>
+                        </span>
+                        {idea.current ? (
+                          <span className="shrink-0 text-[13px] font-medium text-secondary">이어서</span>
+                        ) : null}
+                      </span>
+                      <span className="mt-1.5 block break-keep text-[15px] leading-relaxed text-primary">
+                        <span className="font-semibold">{idea.title}</span>
+                        {idea.thesis ? (
+                          <>
+                            <span className="whitespace-pre-wrap">{"\n"}</span>
+                            <span className="line-clamp-5 font-normal">{idea.thesis}</span>
+                          </>
+                        ) : null}
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </div>
             ))}
             <button
               type="button"
-              className="w-full py-6 text-center text-[13px] text-secondary active:text-primary"
-              onClick={() => actions.dispatch({ kind: "reset-sample", raw: state.campus })}
+              className={`w-full py-5 text-center text-[13px] active:text-primary ${
+                resetArmed ? "font-medium text-primary" : "text-secondary"
+              }`}
+              onClick={() => {
+                if (!resetArmed) {
+                  setResetArmed(true);
+                  window.setTimeout(() => setResetArmed(false), 4000);
+                  return;
+                }
+                setResetArmed(false);
+                actions.dispatch({ kind: "reset-sample", raw: state.campus });
+              }}
             >
-              이 스토리 처음부터
+              {resetArmed ? "다시 누르면 처음부터" : "이 스토리 처음부터"}
             </button>
           </section>
         )}
@@ -180,26 +206,43 @@ function activePost(active: {
   };
 }
 
-function feedIdeas(post: StoryPost, activeIdeaId: string): FeedIdea[] {
-  const rows: FeedIdea[] = [];
+function feedSections(post: StoryPost, activeIdeaId: string): FeedSection[] {
+  const sections: FeedSection[] = [];
+  let currentRow: FeedIdea | null = null;
+
   for (const week of post.weeks) {
+    const ideas: FeedIdea[] = [];
     for (const ideaId of week.ideaIds) {
       const idea = post.ideas.find((item) => item.id === ideaId);
       const thesis = post.cards.find((card) => card.ideaId === ideaId && card.thesis)?.thesis ?? "";
       const meta =
         post.format === "volume" ? "카드뉴스" : post.format === "series" ? week.title : `${week.number}주`;
-      rows.push({
+      const row: FeedIdea = {
         ideaId,
         title: idea?.title ?? "카드뉴스",
         thesis,
         meta,
         current: ideaId === activeIdeaId,
-      });
+      };
+      if (row.current) currentRow = row;
+      else ideas.push(row);
     }
+    if (ideas.length === 0) continue;
+    sections.push({
+      key: week.id,
+      label: post.format === "course" ? `${week.number}주 · ${week.title}` : week.title,
+      ideas,
+    });
   }
-  const current = rows.find((row) => row.current);
-  if (!current) return rows;
-  return [current, ...rows.filter((row) => row.ideaId !== current.ideaId)];
+
+  if (currentRow) {
+    sections.unshift({
+      key: "continue",
+      label: "",
+      ideas: [currentRow],
+    });
+  }
+  return sections;
 }
 
 function shortName(name: string) {
