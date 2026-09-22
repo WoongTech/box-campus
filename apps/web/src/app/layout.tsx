@@ -32,9 +32,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             __html: `
 :root{--sat:0px;--sab:0px}
 html,body{background:#000;margin:0;position:fixed;inset:0;width:100%;height:100%;overflow:hidden}
+.app-sat{padding-top:0.35rem!important}
+.app-sab{padding-bottom:0.5rem!important}
+.app-tabbar{padding-bottom:0.5rem!important}
+@media (display-mode:standalone),(display-mode:fullscreen){
 .app-sat{padding-top:calc(0.35rem + env(safe-area-inset-top,0px))!important}
 .app-sab{padding-bottom:calc(0.5rem + env(safe-area-inset-bottom,0px))!important}
 .app-tabbar{padding-bottom:calc(0.5rem + env(safe-area-inset-bottom,0px))!important}
+}
+html.app-standalone .app-sat{padding-top:calc(0.35rem + env(safe-area-inset-top,0px))!important}
+html.app-standalone .app-sab{padding-bottom:calc(0.5rem + env(safe-area-inset-bottom,0px))!important}
+html.app-standalone .app-tabbar{padding-bottom:calc(0.5rem + env(safe-area-inset-bottom,0px))!important}
 `,
           }}
         />

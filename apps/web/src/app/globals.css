@@ -8,7 +8,6 @@
 
 @layer utilities {
   :root {
-    /* Mirrored from env() by the viewport boot script — never fake floors. */
     --sat: 0px;
     --sab: 0px;
   }
@@ -34,17 +33,45 @@
 }
 
 /*
- * Unlayered so safe-area padding wins over utilities.
- * Comfort + real env() only — invented floors created empty bands in Chrome.
+ * Browser tabs: comfort padding only. Safari/Chrome already inset the page,
+ * and env(safe-area-*) still returns notch/home-indicator values with
+ * viewport-fit=cover — that double-counts and leaves black bands.
+ * Installed PWA (standalone): add real env() insets.
  */
 .app-sat {
-  padding-top: calc(0.35rem + env(safe-area-inset-top, 0px));
+  padding-top: 0.35rem;
 }
 
 .app-sab {
-  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: 0.5rem;
 }
 
 .app-tabbar {
+  padding-bottom: 0.5rem;
+}
+
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  .app-sat {
+    padding-top: calc(0.35rem + env(safe-area-inset-top, 0px));
+  }
+
+  .app-sab {
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .app-tabbar {
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+html.app-standalone .app-sat {
+  padding-top: calc(0.35rem + env(safe-area-inset-top, 0px));
+}
+
+html.app-standalone .app-sab {
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+html.app-standalone .app-tabbar {
   padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
 }
