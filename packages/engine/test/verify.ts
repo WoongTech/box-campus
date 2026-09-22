@@ -273,6 +273,46 @@ test("editor after a check carries the last explanation forward", () => {
       (block) => block.kind === "title" && block.text.includes("배경을 흐리게"),
     ),
   );
+  assert.ok(
+    frame.view.blocks.some(
+      (block) => block.kind === "eyebrow" && block.text.includes("반대"),
+    ),
+  );
+});
+
+test("a wrong editor pick still shows the closing explanation", () => {
+  let state = createInitialState(BOX_CAMPUS_SAMPLE, FIXED_NOW);
+  let frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  while (
+    frame.view.role !== "editor" ||
+    frame.view.control.kind !== "choices"
+  ) {
+    if (frame.view.control.kind === "choices") {
+      const pick = frame.view.control.options[0];
+      state = record(
+        state,
+        { kind: "activate", transitionId: frame.transitionId, actionId: pick.actionId },
+        FIXED_NOW,
+      );
+    } else {
+      state = record(state, { kind: "advance", transitionId: frame.transitionId }, FIXED_NOW);
+    }
+    frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  }
+  const wrong = frame.view.control.options.find((option) => !option.label.includes("연다"));
+  assert.ok(wrong);
+  state = record(
+    state,
+    { kind: "activate", transitionId: frame.transitionId, actionId: wrong.actionId },
+    FIXED_NOW,
+  );
+  frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
+  assert.ok(frame.view.blocks.some((block) => block.kind === "verdict" && block.tone === "retry"));
+  assert.ok(
+    frame.view.blocks.some(
+      (block) => block.kind === "title" && block.text.includes("열린 조리개"),
+    ),
+  );
 });
 
 test("dump and parse reload the first card without a notice", () => {

@@ -63,7 +63,7 @@ export function HomeView({
               <button
                 key={idea.ideaId}
                 type="button"
-                className={`flex w-full gap-3 border-b border-white/10 px-4 py-3.5 text-left active:bg-white/5 ${idea.current ? "bg-white/[0.04]" : ""}`}
+                className={`flex w-full gap-3 border-b border-white/10 px-4 py-3 text-left active:bg-white/5 ${idea.current ? "bg-white/[0.04]" : ""}`}
                 onClick={() => (idea.current ? onOpenStory() : onOpenIdea(post.id, idea.ideaId))}
               >
                 <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
@@ -75,18 +75,18 @@ export function HomeView({
                       <span className="font-semibold">{shortName(post.title)}</span>
                       <span className="text-secondary"> · {idea.meta}</span>
                     </span>
-                    {idea.current ? <span className="shrink-0 text-[12px] text-secondary">이어서</span> : null}
+                    {idea.current ? <span className="shrink-0 text-[12px] font-medium text-white/70">이어서</span> : null}
                   </span>
-                  <span className="mt-0.5 block truncate text-[12px] text-secondary">{idea.title}</span>
+                  <span className="mt-1 block break-keep text-[15px] font-semibold leading-snug text-primary">{idea.title}</span>
                   {idea.thesis ? (
-                    <span className="mt-1.5 line-clamp-3 block break-keep text-[15px] leading-relaxed text-primary">{idea.thesis}</span>
+                    <span className="mt-1 line-clamp-3 block break-keep text-[15px] leading-relaxed text-primary/90">{idea.thesis}</span>
                   ) : null}
                 </span>
               </button>
             ))}
             <button
               type="button"
-              className="w-full py-6 text-center text-[12px] text-secondary/80"
+              className="w-full py-5 text-center text-[12px] text-secondary/80"
               onClick={() => actions.dispatch({ kind: "reset-sample", raw: state.campus })}
             >
               이 스토리 처음부터
@@ -120,16 +120,18 @@ export function SavedView({ onOpenCard }: { onOpenCard: (cardId: string) => void
             <button
               key={item.cardId}
               type="button"
-              className="flex w-full gap-3 border-b border-white/10 px-4 py-3.5 text-left active:bg-white/5"
+              className="flex w-full gap-3 border-b border-white/10 px-4 py-3 text-left active:bg-white/5"
               onClick={() => onOpenCard(item.cardId)}
             >
               <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
                 {initial}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[13px] font-semibold">{shortName(item.story)}</span>
-                <span className="mt-0.5 block truncate text-[12px] text-secondary">{item.topic}</span>
-                <span className="mt-1.5 line-clamp-3 block break-keep text-[15px] leading-relaxed text-primary">{item.text}</span>
+                <span className="block truncate text-[13px]">
+                  <span className="font-semibold">{shortName(item.story)}</span>
+                </span>
+                <span className="mt-1 block break-keep text-[15px] font-semibold leading-snug text-primary">{item.topic}</span>
+                <span className="mt-1 line-clamp-3 block break-keep text-[15px] leading-relaxed text-primary/90">{item.text}</span>
               </span>
             </button>
           ))
@@ -187,8 +189,8 @@ function feedIdeas(post: StoryPost, activeIdeaId: string): FeedIdea[] {
 
 function shortName(name: string) {
   const head = name.split(/[:：\-–—|]/)[0]?.trim() || name.trim();
-  if (head.length <= 14) return head;
-  return `${head.slice(0, 13)}…`;
+  if (head.length <= 16) return head;
+  return `${head.slice(0, 15)}…`;
 }
 
 type SavedItem = { cardId: string; story: string; topic: string; text: string };

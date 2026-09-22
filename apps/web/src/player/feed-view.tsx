@@ -31,6 +31,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
     (split.hero?.text.length ?? 0) + split.reading.reduce((sum, block) => sum + block.text.length, 0);
   const storyReading = !hasText && !hasChoices && !hasSlideImage;
   const centered = storyReading && readingLength < 90;
+  const choiceCount = view.control.kind === "choices" ? view.control.options.length : 0;
 
   function hideImage(src: string) {
     setFailed((current) => {
@@ -55,7 +56,13 @@ export function FeedView({ onClose }: { onClose: () => void }) {
             </p>
           ))}
       {split.verdict ? (
-        <p className={split.verdict.tone === "retry" ? "text-[13px] font-medium text-error" : "text-[13px] font-medium text-secondary"}>
+        <p
+          className={
+            split.verdict.tone === "retry"
+              ? "text-[13px] font-semibold text-error"
+              : "text-[13px] font-semibold text-secondary"
+          }
+        >
           {split.verdict.text}
         </p>
       ) : null}
@@ -83,7 +90,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
           aria-hidden
         >
           {Array.from({ length: 4 }, (_, index) => (
-            <span key={index} className="h-0.5 flex-1 overflow-hidden rounded-full bg-white/25">
+            <span key={index} className="h-[3px] flex-1 overflow-hidden rounded-full bg-white/25">
               <span
                 className={`block h-full rounded-full bg-white ${index <= view.pentadIndex! ? "w-full" : "w-0"}`}
               />
@@ -169,7 +176,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
               hasText
                 ? "flex min-h-full flex-col justify-end gap-3 py-4"
                 : hasChoices
-                  ? "flex min-h-full flex-col justify-center gap-4 py-6"
+                  ? "flex min-h-full flex-col justify-end gap-3 py-5"
                   : `flex min-h-full flex-col gap-3 py-8 ${storyReading ? "justify-center" : "justify-start"} ${centered ? "text-center" : ""}`
             }
           >
@@ -180,7 +187,9 @@ export function FeedView({ onClose }: { onClose: () => void }) {
 
       {showDock ? (
         <div
-          className="z-10 shrink-0 space-y-2 border-t border-white/10 bg-black px-4 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))]"
+          className={`z-10 shrink-0 space-y-2 border-t border-white/10 bg-black px-4 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] ${
+            choiceCount > 3 ? "max-h-[46%] overflow-y-auto overscroll-contain" : ""
+          }`}
           onClick={(event) => event.stopPropagation()}
         >
           {view.control.kind === "choices" ? (
@@ -189,7 +198,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
                 <button
                   key={option.actionId}
                   type="button"
-                  className="min-h-12 w-full rounded-full border border-white/15 bg-white/10 px-4 py-3 text-left text-[15px] leading-snug"
+                  className="min-h-11 w-full rounded-full border border-white/15 bg-white/10 px-4 py-2.5 text-left text-[15px] leading-snug break-keep"
                   onClick={() =>
                     actions.dispatch({
                       kind: "activate",
@@ -254,7 +263,7 @@ function ReadingLine({ block, centered }: { block: Extract<Block, { text: string
 }
 
 function MetaLine({ block, centered }: { block: Extract<Block, { text: string }>; centered: boolean }) {
-  const className = `text-[13px] text-white/55 ${centered ? "mx-auto max-w-[22rem]" : ""}`;
+  const className = `break-keep text-[13px] text-white/55 ${centered ? "mx-auto max-w-[22rem]" : ""}`;
   if (block.kind === "badge") {
     return (
       <p className={centered ? "mx-auto" : ""}>
@@ -264,7 +273,7 @@ function MetaLine({ block, centered }: { block: Extract<Block, { text: string }>
       </p>
     );
   }
-  if (block.kind === "source" && block.href) {
+  if (block.kind === "source" && "href" in block && block.href) {
     return (
       <a
         href={block.href}

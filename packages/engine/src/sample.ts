@@ -50,7 +50,7 @@ export const BOX_CAMPUS_SAMPLE = {
   ],
   ideas: [
     { id: "idea-a", title: "노출은 빛의 양", weekId: "w1" },
-    { id: "idea-b", title: "손털림", weekId: "w1" },
+    { id: "idea-b", title: "손떨림", weekId: "w1" },
     { id: "idea-c", title: "피사계 심도", weekId: "w2" },
     { id: "idea-d", title: "화이트밸런스", weekId: "w3" },
     { id: "idea-e", title: "시선은 빈 곳으로", weekId: "w4" },
@@ -106,7 +106,7 @@ export const BOX_CAMPUS_SAMPLE = {
       id: "lib-b",
       ideaId: "idea-b",
       thesis:
-        "손으로 지탬 때 대략적 한계는 1 나누기 초점거리 초다. 50mm면 1/50초보다 느리면 손이 남는다.",
+        "손으로 잡을 때 대략적 한계는 1 나누기 초점거리 초다. 50mm면 1/50초보다 느리면 손이 남는다.",
       source: { label: "손떨림 한계. 광각에 따라 조금 달라지는 경험칙." },
       provenance: "authored",
     },
@@ -114,7 +114,7 @@ export const BOX_CAMPUS_SAMPLE = {
       role: "tutor",
       id: "tutor-b",
       ideaId: "idea-b",
-      question: "100mm 렌즈에서 손털림을 줄이려면?",
+      question: "100mm 렌즈에서 손떨림을 줄이려면?",
       choices: [
         "1/50초",
         "1/100초보다 빠르게",

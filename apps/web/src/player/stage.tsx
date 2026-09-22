@@ -63,6 +63,7 @@ export function Stage() {
       setSurface("home");
       return;
     }
+    if (frame.view.control.kind === "choices" || frame.view.control.kind === "text") return;
     actions.advance();
   }
 

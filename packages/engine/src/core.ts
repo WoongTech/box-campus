@@ -724,8 +724,8 @@ function projectCardView(state, encounter) {
       });
     }
     if (encounter.phase === "hole") {
+      blocks.push({ kind: "eyebrow", text: card.holeLabel });
       blocks.push({ kind: "title", text: card.argument });
-      blocks.push({ kind: "body", text: card.holeLabel });
       control = {
         kind: "choices",
         options: card.patches.map(function (p, idx) {
@@ -734,14 +734,26 @@ function projectCardView(state, encounter) {
       };
     } else {
       var patch = card.patches[encounter.selectedIndex];
+      var closingPatch = null;
+      for (var ei = 0; ei < card.patches.length; ei++) {
+        if (card.patches[ei].closesHole) closingPatch = card.patches[ei];
+      }
+      var explanation =
+        (patch && patch.explanation) ||
+        (closingPatch && closingPatch.explanation) ||
+        "";
       blocks.push({
         kind: "verdict",
         tone: encounter.verdict === "closed" ? "good" : "retry",
         text: encounter.verdict === "closed" ? "맞았습니다" : "다시 볼게요",
       });
-      blocks.push({ kind: "title", text: card.argument });
-      if (patch && patch.explanation) {
-        blocks.push({ kind: "body", text: patch.explanation });
+      if (explanation) {
+        blocks.push({ kind: "title", text: explanation });
+      } else {
+        blocks.push({ kind: "title", text: card.argument });
+      }
+      if (encounter.verdict !== "closed" && patch) {
+        blocks.push({ kind: "body", text: patch.label });
       }
       control = { kind: "advance", label: "다음" };
     }

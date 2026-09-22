@@ -28,8 +28,9 @@ export function StoryRail({
           <button
             key={id}
             type="button"
-            className="flex w-16 shrink-0 flex-col items-center gap-1.5"
+            className="flex w-[4.25rem] shrink-0 flex-col items-center gap-1.5"
             aria-current={current ? "true" : undefined}
+            aria-label={name}
             onClick={() => {
               if (onSelect) onSelect(id);
               else if (!current) actions.openAccount(id);
@@ -46,14 +47,18 @@ export function StoryRail({
                 {name.trim().slice(0, 1) || "스"}
               </span>
             </span>
-            <span className={`line-clamp-1 w-full text-center text-[11px] leading-tight ${current ? "font-semibold" : "text-secondary"}`}>
-              {shortLabel(name)}
+            <span
+              className={`line-clamp-2 w-full text-center text-[11px] leading-tight break-keep ${
+                current ? "font-semibold text-primary" : "text-secondary"
+              }`}
+            >
+              {railLabel(name)}
             </span>
           </button>
         );
       })}
       {onCompose ? (
-        <button type="button" className="flex w-16 shrink-0 flex-col items-center gap-1.5" aria-label="추가" onClick={onCompose}>
+        <button type="button" className="flex w-[4.25rem] shrink-0 flex-col items-center gap-1.5" aria-label="추가" onClick={onCompose}>
           <span className="p-[2px]">
             <span className="flex size-14 items-center justify-center rounded-full border border-white/25 text-primary">
               <AppIcon name="plus" size={22} />
@@ -66,10 +71,10 @@ export function StoryRail({
   );
 }
 
-function shortLabel(name: string) {
+function railLabel(name: string) {
   const head = name.split(/[:：\-–—|]/)[0]?.trim() || name.trim();
-  if (head.length <= 8) return head;
-  return `${head.slice(0, 7)}…`;
+  if (head.length <= 12) return head;
+  return `${head.slice(0, 11)}…`;
 }
 
 function titleOf(raw: string | undefined, fallback: string) {
