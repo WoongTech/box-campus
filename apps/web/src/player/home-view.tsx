@@ -74,9 +74,6 @@ export function HomeView({
         row.weekLabel.toLowerCase().includes(q),
     );
   }, [rows, query]);
-  const continueRow = rows.find((row) => row.current) ?? null;
-  const ideaCount = active.ideas.length;
-  const weekCount = active.weeks.filter((week) => week.ideaIds.length > 0).length;
 
   useEffect(() => {
     function onTop() {
@@ -88,7 +85,7 @@ export function HomeView({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="relative flex shrink-0 items-center justify-center px-4 pt-[max(0.85rem,env(safe-area-inset-top))] pb-2">
+      <header className="relative flex shrink-0 items-center justify-center px-4 pt-[max(0.85rem,env(safe-area-inset-top))] pb-1.5">
         <h1 className="m-0 font-normal">
           <Wordmark />
         </h1>
@@ -107,7 +104,8 @@ export function HomeView({
           <AppIcon name={searchOpen ? "close" : "search"} size={20} />
         </button>
       </header>
-      <div className="shrink-0 pb-1">
+
+      <div className="shrink-0">
         <StoryRail
           onCompose={onCompose}
           onSelect={(id) => {
@@ -118,7 +116,7 @@ export function HomeView({
       </div>
 
       {searchOpen ? (
-        <div className="shrink-0 border-y border-white/[0.08] px-4 py-2">
+        <div className="shrink-0 border-b border-white/[0.08] px-4 py-2">
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -129,46 +127,14 @@ export function HomeView({
           />
         </div>
       ) : (
-        <>
-          <button
-            type="button"
-            className="flex shrink-0 items-center gap-3 border-y border-white/[0.08] px-4 py-3 text-left active:bg-white/[0.03]"
-            onClick={onCompose}
-          >
-            <StoryMark seed={active.id} size={36} />
-            <span className="min-w-0 flex-1 text-[15px] text-secondary">새 스토리를 적어 보세요…</span>
-          </button>
-          <div className="flex shrink-0 items-center gap-3 px-4 py-3">
-            <StoryMark seed={active.id} size={44} title={active.title} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[15px] font-semibold leading-5">{shortName(active.title)}</p>
-              <p className="truncate text-[13px] text-secondary">
-                글 {ideaCount} · {active.format === "course" ? `주 ${weekCount}` : active.format === "series" ? "시리즈" : "묶음"}
-              </p>
-            </div>
-            <button
-              type="button"
-              className="shrink-0 rounded-full border border-white/15 px-3 py-1.5 text-[13px] font-medium active:bg-white/10"
-              onClick={onOpenStory}
-            >
-              열기
-            </button>
-          </div>
-          {continueRow ? (
-            <button
-              type="button"
-              className="mx-4 mb-2 flex shrink-0 items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-left active:bg-white/[0.07]"
-              onClick={onOpenStory}
-            >
-              <StoryMark seed={continueRow.campusId} size={32} />
-              <span className="min-w-0 flex-1">
-                <span className="block text-[12px] font-medium text-secondary">이어서 보기</span>
-                <span className="mt-0.5 block truncate text-[14px] font-semibold">{continueRow.title}</span>
-              </span>
-              <span className="shrink-0 text-[13px] text-secondary">계속</span>
-            </button>
-          ) : null}
-        </>
+        <button
+          type="button"
+          className="flex shrink-0 items-center gap-3 border-b border-white/[0.08] px-4 py-3 text-left active:bg-white/[0.03]"
+          onClick={onCompose}
+        >
+          <StoryMark seed={active.id} size={36} />
+          <span className="min-w-0 flex-1 text-[15px] text-secondary">새 스토리를 적어 보세요…</span>
+        </button>
       )}
 
       <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
@@ -190,7 +156,7 @@ export function HomeView({
               return (
                 <div key={row.key}>
                   {showWeek ? (
-                    <p className="px-4 pt-5 pb-1 text-[12px] font-medium tracking-wide text-secondary/80">
+                    <p className="px-4 pt-4 pb-1 text-[12px] font-medium tracking-wide text-secondary/80">
                       {row.campusId === active.id ? row.weekLabel : `${row.handle} · ${row.weekLabel}`}
                     </p>
                   ) : null}
@@ -239,10 +205,10 @@ export function HomeView({
                           ) : null}
                         </span>
                       </button>
-                      <div className="mt-2 flex items-center gap-1">
+                      <div className="mt-1.5 flex items-center">
                         <button
                           type="button"
-                          className={`flex h-9 items-center gap-1.5 rounded-full px-2 text-[13px] active:bg-white/10 ${
+                          className={`flex h-8 items-center gap-1.5 rounded-full px-1.5 text-[13px] active:bg-white/10 ${
                             saved ? "text-primary" : "text-secondary"
                           }`}
                           aria-label={saved ? "저장됨" : "저장"}
@@ -253,11 +219,7 @@ export function HomeView({
                             actions.toggleSaveCard(row.cardId);
                           }}
                         >
-                          <AppIcon
-                            name="bookmark"
-                            size={18}
-                            strokeWidth={saved ? 2.2 : 1.7}
-                          />
+                          <AppIcon name="bookmark" size={17} strokeWidth={saved ? 2.2 : 1.7} />
                           {saved ? "저장됨" : "저장"}
                         </button>
                       </div>

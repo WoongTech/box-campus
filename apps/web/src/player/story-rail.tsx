@@ -28,7 +28,7 @@ export function StoryRail({
   }, [library.order, state.campus.id]);
 
   return (
-    <div className="flex items-start gap-3.5 overflow-x-auto px-4 pb-1 pe-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="flex items-start gap-3 overflow-x-auto px-4 pb-2 pe-5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {ordered.map((id) => {
         const name = id === state.campus.id ? state.campus.title : titleOf(library.shelves[id], "스토리");
         const current = id === state.campus.id;
@@ -37,7 +37,7 @@ export function StoryRail({
           <button
             key={id}
             type="button"
-            className="flex w-[4.5rem] shrink-0 flex-col items-center gap-1.5"
+            className="flex w-16 shrink-0 flex-col items-center gap-1"
             aria-current={current ? "true" : undefined}
             aria-label={name}
             onClick={() => {
@@ -48,14 +48,14 @@ export function StoryRail({
             }}
           >
             <span
-              className={`rounded-full p-[2px] ${
+              className={`rounded-full p-[1.5px] ${
                 opened
-                  ? "bg-white/25"
+                  ? "bg-white/20"
                   : "bg-[conic-gradient(from_210deg,#f9ce34,#ee2a7b,#6228d7,#f9ce34)]"
               }`}
             >
-              <span className="rounded-full bg-black p-[2px]">
-                <StoryMark seed={id} size={56} title={name} />
+              <span className="block rounded-full bg-black p-[2px]">
+                <StoryMark seed={id} size={52} title={name} />
               </span>
             </span>
             <span
@@ -69,11 +69,9 @@ export function StoryRail({
         );
       })}
       {onCompose ? (
-        <button type="button" className="flex w-[4.5rem] shrink-0 flex-col items-center gap-1.5" aria-label="추가" onClick={onCompose}>
-          <span className="p-[2px]">
-            <span className="flex size-[3.75rem] items-center justify-center rounded-full border border-white/25 text-primary">
-              <AppIcon name="plus" size={24} />
-            </span>
+        <button type="button" className="flex w-16 shrink-0 flex-col items-center gap-1" aria-label="추가" onClick={onCompose}>
+          <span className="flex size-[58px] items-center justify-center rounded-full border border-white/20 text-primary">
+            <AppIcon name="plus" size={22} />
           </span>
           <span className="text-[11px] leading-tight text-secondary">추가</span>
         </button>
@@ -84,8 +82,8 @@ export function StoryRail({
 
 function railLabel(name: string) {
   const head = name.split(/[:：\-–—|]/)[0]?.trim() || name.trim();
-  if (head.length <= 10) return head;
-  return `${head.slice(0, 9)}…`;
+  if (head.length <= 8) return head;
+  return `${head.slice(0, 7)}…`;
 }
 
 function titleOf(raw: string | undefined, fallback: string) {
