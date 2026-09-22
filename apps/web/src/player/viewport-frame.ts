@@ -12,21 +12,10 @@ export function viewportBox(input: {
   const keyboard = input.innerHeight - input.visualHeight > 140;
   if (keyboard) return { top: input.visualTop, height: input.visualHeight };
 
-  let height = Math.max(input.innerHeight, input.visualHeight, 0);
-  if (input.ios && input.standalone) {
-    const screenH = cssScreenHeight(input.screenHeight, input.devicePixelRatio, height);
-    const gap = screenH - height;
-    if (gap > 1 && gap < 260) height = screenH;
-  }
+  // Stay on the visible viewport. Expanding to screen.height pushes the
+  // bottom chrome under the home indicator and clips the tab bar.
+  const height = Math.max(input.innerHeight, input.visualHeight, 0);
   return { top: 0, height };
-}
-
-function cssScreenHeight(raw: number, dpr: number, viewport: number) {
-  if (dpr > 1 && raw > viewport * 1.5) {
-    const asCss = raw / dpr;
-    if (asCss > 200 && Math.abs(asCss - viewport) < viewport) return asCss;
-  }
-  return raw;
 }
 
 function iosDevice() {
@@ -39,7 +28,22 @@ function standaloneDisplay() {
   return window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
 }
 
-/** Pin the shell to the visual viewport. 100dvh is short in iOS standalone. */
+function readSafeArea(side: "top" | "bottom") {
+  try {
+    const probe = document.createElement("div");
+    const pad = side === "top" ? "padding-top" : "padding-bottom";
+    const env = side === "top" ? "safe-area-inset-top" : "safe-area-inset-bottom";
+    probe.style.cssText = `position:fixed;inset:auto;${pad}:env(${env},0px);visibility:hidden;pointer-events:none`;
+    document.documentElement.appendChild(probe);
+    const value = parseFloat(getComputedStyle(probe)[side === "top" ? "paddingTop" : "paddingBottom"] || "0");
+    probe.remove();
+    return Number.isFinite(value) ? value : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/** Pin the shell to the visual viewport and publish safe-area floors. */
 export function installViewportFrame() {
   if (typeof window === "undefined") return;
   const vv = window.visualViewport;
@@ -55,29 +59,22 @@ export function installViewportFrame() {
     standalone: standaloneDisplay(),
   });
   if (box.height < 1) return;
+
+  const ios = iosDevice();
+  const standalone = standaloneDisplay();
+  // Notched iPhones need a floor when env(safe-area-*) reports 0 in some standalone builds.
+  const satFloor = ios ? (standalone ? 44 : 20) : 0;
+  const sabFloor = ios ? (standalone ? 34 : 12) : 0;
+  const sat = Math.max(readSafeArea("top"), satFloor);
+  const sab = Math.max(readSafeArea("bottom"), sabFloor);
+
   const root = document.documentElement;
   root.style.setProperty("--app-top", `${box.top}px`);
   root.style.setProperty("--app-height", `${box.height}px`);
-  // Keep a floor for the home-indicator gap when env(safe-area) is flaky in standalone.
-  const sab = readSafeAreaBottom();
-  const floor = iosDevice() && standaloneDisplay() ? 22 : 0;
-  root.style.setProperty("--sab", `${Math.max(sab, floor)}px`);
-}
-
-function readSafeAreaBottom() {
-  try {
-    const probe = document.createElement("div");
-    probe.style.cssText =
-      "position:fixed;bottom:0;left:0;visibility:hidden;padding-bottom:env(safe-area-inset-bottom,0px)";
-    document.documentElement.appendChild(probe);
-    const value = parseFloat(getComputedStyle(probe).paddingBottom || "0");
-    probe.remove();
-    return Number.isFinite(value) ? value : 0;
-  } catch {
-    return 0;
-  }
+  root.style.setProperty("--sat", `${sat}px`);
+  root.style.setProperty("--sab", `${sab}px`);
 }
 
 export function viewportFrameScript() {
-  return `(()=>{try{${cssScreenHeight.toString()};${viewportBox.toString()};${iosDevice.toString()};${standaloneDisplay.toString()};${readSafeAreaBottom.toString()};${installViewportFrame.toString()};installViewportFrame();}catch(e){}})();`;
+  return `(()=>{try{${viewportBox.toString()};${iosDevice.toString()};${standaloneDisplay.toString()};${readSafeArea.toString()};${installViewportFrame.toString()};installViewportFrame();}catch(e){}})();`;
 }

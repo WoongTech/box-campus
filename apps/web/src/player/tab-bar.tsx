@@ -18,7 +18,7 @@ export function TabBar({
   return (
     <nav
       className="absolute inset-x-0 bottom-0 z-30 border-t border-white/10 bg-black"
-      style={{ paddingBottom: "calc(10px + var(--sab, env(safe-area-inset-bottom, 0px)))" }}
+      style={{ paddingBottom: "calc(12px + var(--sab))" }}
     >
       <div className="grid h-12 grid-cols-3">
         <TabButton label="홈" current={tab === "home"} onClick={onHome} name="home" />

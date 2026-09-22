@@ -10,9 +10,10 @@
   :root {
     --app-top: 0px;
     --app-height: 100%;
-    /* Extra 10px keeps icons above the home indicator; --sab set from JS on iOS PWA. */
+    --sat: env(safe-area-inset-top, 0px);
     --sab: env(safe-area-inset-bottom, 0px);
-    --tab-bar-height: calc(3rem + 10px + var(--sab));
+    /* 48px icons + 12px lift above home indicator + safe-area */
+    --tab-bar-height: calc(3rem + 12px + var(--sab));
   }
 
   html,
@@ -25,7 +26,7 @@
     min-height: 0;
     overflow: hidden;
     overscroll-behavior: none;
-    background: #111111;
+    background: #000000;
   }
 
   /* Sheets use 100dvh, which is not the visible PWA screen. */

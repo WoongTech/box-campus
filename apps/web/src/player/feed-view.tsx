@@ -86,7 +86,8 @@ export function FeedView({ onClose }: { onClose: () => void }) {
     <section className="relative flex h-full min-h-0 flex-col bg-black">
       {typeof view.pentadIndex === "number" ? (
         <div
-          className="pointer-events-none flex shrink-0 gap-1 px-3 pt-[max(0.5rem,env(safe-area-inset-top))]"
+          className="pointer-events-none flex shrink-0 gap-1 px-3"
+          style={{ paddingTop: "calc(0.35rem + var(--sat))" }}
           aria-hidden
         >
           {Array.from({ length: 4 }, (_, index) => (
@@ -98,7 +99,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
           ))}
         </div>
       ) : (
-        <div className="shrink-0 pt-[max(0.5rem,env(safe-area-inset-top))]" />
+        <div className="shrink-0" style={{ paddingTop: "calc(0.35rem + var(--sat))" }} />
       )}
 
       <div
@@ -164,14 +165,19 @@ export function FeedView({ onClose }: { onClose: () => void }) {
               />
             ))}
           </div>
-          <div className="max-h-[42%] shrink-0 space-y-2 overflow-y-auto overscroll-contain border-t border-white/10 bg-black px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]" data-story-scroll>
+          <div
+            className="max-h-[42%] shrink-0 space-y-2 overflow-y-auto overscroll-contain border-t border-white/10 bg-black px-5 pt-4"
+            style={{ paddingBottom: "calc(1rem + var(--sab))" }}
+            data-story-scroll
+          >
             {copy}
           </div>
         </div>
       ) : (
         <div
           key={`${frame.transitionId}-${nav}`}
-          className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 ${showDock ? "pb-3" : "pb-[max(1.5rem,env(safe-area-inset-bottom))]"}`}
+          className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 ${showDock ? "pb-3" : ""}`}
+          style={showDock ? undefined : { paddingBottom: "calc(1.25rem + var(--sab))" }}
           data-story-scroll
         >
           <div
@@ -190,9 +196,10 @@ export function FeedView({ onClose }: { onClose: () => void }) {
 
       {showDock ? (
         <div
-          className={`z-10 shrink-0 space-y-2 border-t border-white/10 bg-black px-4 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] ${
+          className={`z-10 shrink-0 space-y-2 border-t border-white/10 bg-black px-4 pt-3 ${
             choiceCount > 3 ? "max-h-[46%] overflow-y-auto overscroll-contain" : ""
           }`}
+          style={{ paddingBottom: "calc(0.75rem + var(--sab))" }}
           onClick={(event) => event.stopPropagation()}
         >
           {view.control.kind === "choices" ? (

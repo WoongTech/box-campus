@@ -9,7 +9,10 @@ export function StripView() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-6">
+      <div
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6"
+        style={{ paddingTop: "calc(0.5rem + var(--sat))" }}
+      >
         <h1 className="text-[17px] font-semibold tracking-tight">{frame.title}</h1>
         <div className="mt-4 flex flex-col gap-3">
           {frame.weeks.map((week) => {
@@ -34,7 +37,10 @@ export function StripView() {
           })}
         </div>
       </div>
-      <div className="shrink-0 border-t border-white/10 px-4 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))]">
+      <div
+        className="shrink-0 border-t border-white/10 px-4 pt-3"
+        style={{ paddingBottom: "calc(0.75rem + var(--sab))" }}
+      >
         <button
           type="button"
           className="h-12 w-full rounded-full bg-white text-[15px] font-semibold text-black"
