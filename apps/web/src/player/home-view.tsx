@@ -39,11 +39,8 @@ export function HomeView({
   const handle = shortName(post.title);
 
   return (
-    <div className="flex h-full min-h-0 flex-col pb-[var(--tab-bar-height)]">
-      <header
-        className="flex shrink-0 items-center px-4 pb-2"
-        style={{ paddingTop: "calc(0.5rem + var(--sat))" }}
-      >
+    <div className="flex h-full min-h-0 flex-col">
+      <header className="app-sat flex shrink-0 items-center px-4 pb-2">
         <h1 className="m-0 font-normal">
           <Wordmark />
         </h1>
@@ -120,11 +117,8 @@ export function SavedView({ onOpenCard }: { onOpenCard: (cardId: string) => void
     .filter((item): item is SavedItem => item !== null);
 
   return (
-    <div className="flex h-full min-h-0 flex-col pb-[var(--tab-bar-height)]">
-      <header
-        className="flex shrink-0 items-center border-b border-white/[0.08] px-4 pb-3"
-        style={{ paddingTop: "calc(0.5rem + var(--sat))" }}
-      >
+    <div className="flex h-full min-h-0 flex-col">
+      <header className="app-sat flex shrink-0 items-center border-b border-white/[0.08] px-4 pb-3">
         <h1 className="flex h-6 items-center text-[17px] font-bold tracking-tight">저장</h1>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">

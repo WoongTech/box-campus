@@ -1,19 +1,3 @@
-export type ViewportBox = { top: number; height: number };
-
-export function viewportBox(input: {
-  innerHeight: number;
-  visualHeight: number;
-  visualTop: number;
-}): ViewportBox {
-  const keyboard = input.innerHeight - input.visualHeight > 140;
-  if (keyboard) return { top: input.visualTop, height: input.visualHeight };
-
-  // Stay on the visible viewport. Expanding to screen.height pushes the
-  // bottom chrome under the home indicator and clips the tab bar.
-  const height = Math.max(input.innerHeight, input.visualHeight, 0);
-  return { top: 0, height };
-}
-
 function iosDevice() {
   const ua = navigator.userAgent || "";
   return /iP(hone|ad|od)/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
@@ -28,10 +12,14 @@ function readSafeArea(side: "top" | "bottom") {
   try {
     const probe = document.createElement("div");
     const pad = side === "top" ? "padding-top" : "padding-bottom";
-    const env = side === "top" ? "safe-area-inset-top" : "safe-area-inset-bottom";
-    probe.style.cssText = `position:fixed;inset:auto;${pad}:env(${env},0px);visibility:hidden;pointer-events:none`;
+    const envName = side === "top" ? "safe-area-inset-top" : "safe-area-inset-bottom";
+    // constant() first for older iOS, then env()
+    probe.style.cssText =
+      `position:fixed;left:0;${side}:0;visibility:hidden;pointer-events:none;` +
+      `${pad}:constant(${envName});${pad}:env(${envName},0px)`;
     document.documentElement.appendChild(probe);
-    const value = parseFloat(getComputedStyle(probe)[side === "top" ? "paddingTop" : "paddingBottom"] || "0");
+    const key = side === "top" ? "paddingTop" : "paddingBottom";
+    const value = parseFloat(getComputedStyle(probe)[key] || "0");
     probe.remove();
     return Number.isFinite(value) ? value : 0;
   } catch {
@@ -39,34 +27,25 @@ function readSafeArea(side: "top" | "bottom") {
   }
 }
 
-/** Pin the shell to the visual viewport and publish safe-area floors. */
+/**
+ * Publish --sat/--sab pixel floors. Layout itself uses inset:0 + CSS env();
+ * this only patches devices where env(safe-area-*) returns 0 in standalone.
+ */
 export function installViewportFrame() {
   if (typeof window === "undefined") return;
-  const vv = window.visualViewport;
-  const innerHeight = window.innerHeight;
-  const visualHeight = vv?.height ?? innerHeight;
-  const box = viewportBox({
-    innerHeight,
-    visualHeight,
-    visualTop: vv?.offsetTop ?? 0,
-  });
-  if (box.height < 1) return;
-
   const ios = iosDevice();
+  if (!ios) {
+    document.documentElement.style.setProperty("--sat", "0px");
+    document.documentElement.style.setProperty("--sab", "0px");
+    return;
+  }
   const standalone = standaloneDisplay();
-  // Notched iPhones need a floor when env(safe-area-*) reports 0 in some standalone builds.
-  const satFloor = ios ? (standalone ? 44 : 20) : 0;
-  const sabFloor = ios ? (standalone ? 34 : 12) : 0;
-  const sat = Math.max(readSafeArea("top"), satFloor);
-  const sab = Math.max(readSafeArea("bottom"), sabFloor);
-
-  const root = document.documentElement;
-  root.style.setProperty("--app-top", `${box.top}px`);
-  root.style.setProperty("--app-height", `${box.height}px`);
-  root.style.setProperty("--sat", `${sat}px`);
-  root.style.setProperty("--sab", `${sab}px`);
+  const sat = Math.max(readSafeArea("top"), standalone ? 47 : 0);
+  const sab = Math.max(readSafeArea("bottom"), standalone ? 34 : 0);
+  document.documentElement.style.setProperty("--sat", `${sat}px`);
+  document.documentElement.style.setProperty("--sab", `${sab}px`);
 }
 
 export function viewportFrameScript() {
-  return `(()=>{try{${viewportBox.toString()};${iosDevice.toString()};${standaloneDisplay.toString()};${readSafeArea.toString()};${installViewportFrame.toString()};installViewportFrame();}catch(e){}})();`;
+  return `(()=>{try{${iosDevice.toString()};${standaloneDisplay.toString()};${readSafeArea.toString()};${installViewportFrame.toString()};installViewportFrame();}catch(e){}})();`;
 }

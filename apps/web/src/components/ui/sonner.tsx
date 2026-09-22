@@ -8,7 +8,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme="dark"
       position="top-center"
-      offset={{ top: "calc(12px + var(--sat))" }}
+      offset={{ top: "max(12px, env(safe-area-inset-top), var(--sat))" }}
       className="toaster group"
       icons={{
         success: <AppIcon name="toastSuccess" size={phoneIconSize.toast} />,

@@ -16,10 +16,7 @@ export function TabBar({
   onCompose: () => void;
 }) {
   return (
-    <nav
-      className="absolute inset-x-0 bottom-0 z-30 border-t border-white/10 bg-black"
-      style={{ paddingBottom: "calc(12px + var(--sab))" }}
-    >
+    <nav className="app-tabbar z-30 shrink-0 border-t border-white/10 bg-black">
       <div className="grid h-12 grid-cols-3">
         <TabButton label="홈" current={tab === "home"} onClick={onHome} name="home" />
         <TabButton label="추가" onClick={onCompose} name="plus" />

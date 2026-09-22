@@ -166,28 +166,30 @@ export function Stage() {
         }, WHEEL_LOCK_MS);
       }}
     >
-      {frame.kind === "strip" ? (
-        <StripView />
-      ) : surface === "story" ? (
-        <FeedView onClose={() => setSurface("home")} />
-      ) : surface === "saved" ? (
-        <SavedView
-          onOpenCard={(cardId) => {
-            actions.openSaved(cardId);
-            setSurface("story");
-          }}
-        />
-      ) : (
-        <HomeView
-          onCompose={() => setComposeOpen(true)}
-          onOpenStory={() => setSurface("story")}
-          onOpenIdea={(campusId, ideaId) => {
-            if (campusId !== state.campus.id) actions.openAccount(campusId);
-            actions.openIdea(ideaId);
-            setSurface("story");
-          }}
-        />
-      )}
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        {frame.kind === "strip" ? (
+          <StripView />
+        ) : surface === "story" ? (
+          <FeedView onClose={() => setSurface("home")} />
+        ) : surface === "saved" ? (
+          <SavedView
+            onOpenCard={(cardId) => {
+              actions.openSaved(cardId);
+              setSurface("story");
+            }}
+          />
+        ) : (
+          <HomeView
+            onCompose={() => setComposeOpen(true)}
+            onOpenStory={() => setSurface("story")}
+            onOpenIdea={(campusId, ideaId) => {
+              if (campusId !== state.campus.id) actions.openAccount(campusId);
+              actions.openIdea(ideaId);
+              setSurface("story");
+            }}
+          />
+        )}
+      </div>
       {showTabs ? (
         <TabBar
           tab={surface === "saved" ? "saved" : "home"}
