@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { AppIcon } from "@/lib/icons";
 import { useCampus } from "./campus-provider";
+import { markStorySeen, readSeenStories } from "./learner-prefs";
 
 export function StoryRail({
   onCompose,
@@ -11,6 +13,7 @@ export function StoryRail({
   onSelect?: (id: string) => void;
 }) {
   const { state, library, actions } = useCampus();
+  const [seen, setSeen] = useState<string[]>([]);
   const ordered = [...library.order];
   if (!ordered.includes(state.campus.id)) ordered.unshift(state.campus.id);
   ordered.sort((left, right) => {
@@ -19,11 +22,16 @@ export function StoryRail({
     return 0;
   });
 
+  useEffect(() => {
+    setSeen(readSeenStories());
+  }, [library.order, state.campus.id]);
+
   return (
     <div className="flex items-start gap-3.5 overflow-x-auto px-4 pb-1 pe-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {ordered.map((id) => {
         const name = id === state.campus.id ? state.campus.title : titleOf(library.shelves[id], "스토리");
         const current = id === state.campus.id;
+        const opened = seen.includes(id);
         return (
           <button
             key={id}
@@ -32,15 +40,17 @@ export function StoryRail({
             aria-current={current ? "true" : undefined}
             aria-label={name}
             onClick={() => {
+              markStorySeen(id);
+              setSeen(readSeenStories());
               if (onSelect) onSelect(id);
               else if (!current) actions.openAccount(id);
             }}
           >
             <span
               className={`rounded-full p-[2px] ${
-                current
-                  ? "bg-[conic-gradient(from_210deg,#f9ce34,#ee2a7b,#6228d7,#f9ce34)]"
-                  : "bg-white/20"
+                opened
+                  ? "bg-white/25"
+                  : "bg-[conic-gradient(from_210deg,#f9ce34,#ee2a7b,#6228d7,#f9ce34)]"
               }`}
             >
               <span className="flex size-[3.75rem] items-center justify-center rounded-full bg-body text-[15px] font-semibold">

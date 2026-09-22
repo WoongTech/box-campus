@@ -56,6 +56,7 @@ type CampusContextValue = {
     advance: () => void;
     back: () => void;
     toggleSave: () => void;
+    unsaveCard: (cardId: string) => void;
     openAccount: (id: string) => void;
     openIdea: (ideaId: string) => void;
     openSaved: (cardId: string) => void;
@@ -443,11 +444,18 @@ export function CampusProvider({ children }: { children: ReactNode }) {
       toast(saving ? "저장했습니다" : "저장을 해제했습니다");
     }
 
+    function unsaveCard(cardId: string) {
+      const shelf = queryClient.getQueryData<Library>(["library"]);
+      if (!shelf || !cardId || !shelf.saved.includes(cardId)) return;
+      writeLibrary({ ...shelf, saved: shelf.saved.filter((id) => id !== cardId) });
+      toast("저장을 해제했습니다");
+    }
+
     return {
       state,
       frame: schedule(state, now(), { kind: "resume" }),
       library,
-      actions: { dispatch, advance, back, toggleSave, openAccount, openIdea, openSaved },
+      actions: { dispatch, advance, back, toggleSave, unsaveCard, openAccount, openIdea, openSaved },
       meta: {
         cardId: cardIdOf(state),
         saved: library.saved.includes(cardIdOf(state)),

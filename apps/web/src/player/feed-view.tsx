@@ -1,18 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { AppIcon, phoneIconSize } from "@/lib/icons";
 import type { Block } from "@box-campus/engine";
 import { useCampus } from "./campus-provider";
 import { useFieldFocusLock } from "./interaction-lock";
+import { tapHintDismissed } from "./learner-prefs";
 import { splitBlocks } from "./split-blocks";
 
 export function FeedView({ onClose }: { onClose: () => void }) {
   const { state, frame, actions, meta, nav } = useCampus();
   const [failed, setFailed] = useState<{ slide: string; srcs: string[] }>({ slide: "", srcs: [] });
-  if (frame.kind !== "card") return null;
-  const view = frame.view;
+  const [showTapHint, setShowTapHint] = useState(false);
+  const view = frame.kind === "card" ? frame.view : null;
+  const canAdvance = Boolean(view && view.control.kind === "advance" && view.role !== "hub");
+  const showDock = Boolean(
+    view && (view.control.kind === "choices" || view.control.kind === "text" || view.role === "hub"),
+  );
+
+  useEffect(() => {
+    if (!canAdvance || showDock || tapHintDismissed()) {
+      setShowTapHint(false);
+      return;
+    }
+    setShowTapHint(true);
+  }, [canAdvance, showDock, frame.transitionId, nav]);
+
+  if (frame.kind !== "card" || !view) return null;
   const split = splitBlocks(view.blocks);
   const hasChoices = view.control.kind === "choices";
   const hasText = view.control.kind === "text";
@@ -22,7 +37,6 @@ export function FeedView({ onClose }: { onClose: () => void }) {
     (block) => block.kind === "eyebrow" && block.text !== ideaTitle,
   );
   const showMetaInStrip = !hasChoices && split.meta.length > 0 && view.role !== "advisor";
-  const showDock = hasChoices || hasText || view.role === "hub";
   const slide = `${frame.transitionId}`;
   const hidden = failed.slide === slide ? failed.srcs : [];
   const images = split.images.filter((block) => !hidden.includes(block.src));
@@ -32,6 +46,13 @@ export function FeedView({ onClose }: { onClose: () => void }) {
   const storyReading = !hasText && !hasChoices && !hasSlideImage;
   const centered = storyReading && readingLength < 90;
   const choiceCount = view.control.kind === "choices" ? view.control.options.length : 0;
+  const progressLabel =
+    typeof view.pentadIndex === "number"
+      ? `${view.pentadIndex + 1}/4`
+      : view.weekLabel
+        ? view.weekLabel
+        : null;
+  const subtitle = [ideaTitle ? shortCampus(state.campus.title) : null, progressLabel].filter(Boolean).join(" · ");
 
   function hideImage(src: string) {
     setFailed((current) => {
@@ -107,9 +128,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[14px] font-semibold leading-tight">{ideaTitle || state.campus.title}</p>
-          {ideaTitle ? (
-            <p className="truncate text-[11px] text-white/60">{shortCampus(state.campus.title)}</p>
-          ) : null}
+          {subtitle ? <p className="truncate text-[11px] text-white/60">{subtitle}</p> : null}
         </div>
         {meta.cardId ? (
           <button
@@ -230,6 +249,14 @@ export function FeedView({ onClose }: { onClose: () => void }) {
               홈
             </button>
           ) : null}
+        </div>
+      ) : null}
+
+      {showTapHint ? (
+        <div className="pointer-events-none absolute inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-30 flex justify-center px-6">
+          <p className="rounded-full bg-white/12 px-4 py-2 text-center text-[13px] font-medium text-white/90 backdrop-blur-md">
+            탭하거나 밀어 다음으로
+          </p>
         </div>
       ) : null}
     </section>

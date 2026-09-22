@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AppIcon, phoneIconSize } from "@/lib/icons";
 import { StoryRail } from "./story-rail";
 import { Wordmark } from "./brand";
 import { useCampus } from "./campus-provider";
@@ -135,7 +136,7 @@ export function HomeView({
 }
 
 export function SavedView({ onOpenCard }: { onOpenCard: (cardId: string) => void }) {
-  const { state, library } = useCampus();
+  const { state, library, actions } = useCampus();
   const cards = state.campus.cards as LooseCard[];
   const ideas = state.campus.ideas;
   const items = library.saved
@@ -149,31 +150,43 @@ export function SavedView({ onOpenCard }: { onOpenCard: (cardId: string) => void
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {items.length === 0 ? (
-          <EmptyCopy title="저장한 글이 없습니다" detail="스토리에서 표시해 두면 여기에 모입니다." />
+          <EmptyCopy title="저장한 글이 없습니다" detail="스토리에서 북마크로 남겨 두면 여기에 모입니다." />
         ) : (
           items.map((item) => {
             const initial = item.story.trim().slice(0, 1) || "스";
             return (
-              <button
+              <div
                 key={item.cardId}
-                type="button"
-                className="flex w-full gap-3 border-b border-white/[0.08] px-4 py-3.5 text-left active:bg-white/[0.03]"
-                onClick={() => onOpenCard(item.cardId)}
+                className="flex w-full items-stretch gap-1 border-b border-white/[0.08]"
               >
-                <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
-                  {initial}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] font-semibold leading-5 text-primary">
-                    {shortName(item.story)}
+                <button
+                  type="button"
+                  className="flex min-w-0 flex-1 gap-3 px-4 py-3.5 text-left active:bg-white/[0.03]"
+                  onClick={() => onOpenCard(item.cardId)}
+                >
+                  <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
+                    {initial}
                   </span>
-                  <span className="mt-1.5 block break-keep text-[15px] leading-relaxed text-primary">
-                    <span className="font-semibold">{item.topic}</span>
-                    <span className="whitespace-pre-wrap">{"\n"}</span>
-                    <span className="line-clamp-5 font-normal">{item.text}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[15px] font-semibold leading-5 text-primary">
+                      {shortName(item.story)}
+                    </span>
+                    <span className="mt-1.5 block break-keep text-[15px] leading-relaxed text-primary">
+                      <span className="font-semibold">{item.topic}</span>
+                      <span className="whitespace-pre-wrap">{"\n"}</span>
+                      <span className="line-clamp-5 font-normal">{item.text}</span>
+                    </span>
                   </span>
-                </span>
-              </button>
+                </button>
+                <button
+                  type="button"
+                  className="flex w-12 shrink-0 items-center justify-center text-white/45 active:text-white"
+                  aria-label="저장 해제"
+                  onClick={() => actions.unsaveCard(item.cardId)}
+                >
+                  <AppIcon name="bookmark" size={20} strokeWidth={2.2} />
+                </button>
+              </div>
             );
           })
         )}
@@ -291,17 +304,26 @@ function previewSaved(
 }
 
 function EmptyCopy({ title, detail, onClick }: { title: string; detail: string; onClick?: () => void }) {
-  const className = "w-full px-8 py-16 text-center";
-  const body = (
-    <>
+  if (!onClick) {
+    return (
+      <div className="w-full px-8 py-16 text-center">
+        <span className="block text-[15px] font-semibold">{title}</span>
+        <span className="mt-1 block text-[15px] leading-relaxed text-secondary">{detail}</span>
+      </div>
+    );
+  }
+  return (
+    <div className="flex w-full flex-col items-center px-8 py-16 text-center">
       <span className="block text-[15px] font-semibold">{title}</span>
       <span className="mt-1 block text-[15px] leading-relaxed text-secondary">{detail}</span>
-    </>
-  );
-  if (!onClick) return <div className={className}>{body}</div>;
-  return (
-    <button type="button" className={className} onClick={onClick}>
-      {body}
-    </button>
+      <button
+        type="button"
+        className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 text-[15px] font-semibold text-black active:bg-white/90"
+        onClick={onClick}
+      >
+        <AppIcon name="plus" size={phoneIconSize.sheet} />
+        추가하기
+      </button>
+    </div>
   );
 }

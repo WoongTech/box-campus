@@ -10,6 +10,7 @@ import { HomeView, SavedView } from "./home-view";
 import { StripView } from "./strip-view";
 import { PhoneFrame } from "./phone-frame";
 import { TabBar } from "./tab-bar";
+import { dismissTapHint, markStorySeen } from "./learner-prefs";
 
 const WHEEL_LOCK_MS = 450;
 const LEFT_ZONE = 0.33;
@@ -79,6 +80,7 @@ export function Stage() {
 
   function goNext() {
     if (frame.kind !== "card") return;
+    dismissTapHint();
     if (cardRole === "hub") {
       setSurface("home");
       return;
@@ -89,6 +91,7 @@ export function Stage() {
 
   function goBack() {
     if (frame.kind !== "card") return;
+    dismissTapHint();
     if (cardRole === "advisor") {
       actions.dispatch({ kind: "cancel-advisor" });
       return;
@@ -98,6 +101,11 @@ export function Stage() {
     if (trail === 0) return;
     actions.back();
   }
+
+  useEffect(() => {
+    if (surface !== "story") return;
+    markStorySeen(state.campus.id);
+  }, [surface, state.campus.id]);
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
