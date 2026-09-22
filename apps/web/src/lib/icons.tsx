@@ -11,6 +11,7 @@ import {
   Loading02Icon,
   MultiplicationSignCircleIcon,
   PencilEdit02Icon,
+  Search01Icon,
 } from "@hugeicons/core-free-icons";
 import type { ComponentProps } from "react";
 
@@ -33,6 +34,7 @@ const registry = {
   close: Cancel01Icon,
   pen: PencilEdit02Icon,
   paste: ClipboardPasteIcon,
+  search: Search01Icon,
   toastSuccess: CheckmarkCircle01Icon,
   toastInfo: InformationCircleIcon,
   toastWarning: Alert02Icon,

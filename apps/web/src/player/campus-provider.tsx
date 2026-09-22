@@ -56,6 +56,7 @@ type CampusContextValue = {
     advance: () => void;
     back: () => void;
     toggleSave: () => void;
+    toggleSaveCard: (cardId: string) => void;
     unsaveCard: (cardId: string) => void;
     openAccount: (id: string) => void;
     openIdea: (ideaId: string) => void;
@@ -436,6 +437,12 @@ export function CampusProvider({ children }: { children: ReactNode }) {
       if (!current || !shelf) return;
       const cardId = cardIdOf(current);
       if (!cardId) return;
+      toggleSaveCard(cardId);
+    }
+
+    function toggleSaveCard(cardId: string) {
+      const shelf = queryClient.getQueryData<Library>(["library"]);
+      if (!shelf || !cardId) return;
       const saving = !shelf.saved.includes(cardId);
       const saved = saving
         ? [...shelf.saved, cardId]
@@ -455,7 +462,17 @@ export function CampusProvider({ children }: { children: ReactNode }) {
       state,
       frame: schedule(state, now(), { kind: "resume" }),
       library,
-      actions: { dispatch, advance, back, toggleSave, unsaveCard, openAccount, openIdea, openSaved },
+      actions: {
+        dispatch,
+        advance,
+        back,
+        toggleSave,
+        toggleSaveCard,
+        unsaveCard,
+        openAccount,
+        openIdea,
+        openSaved,
+      },
       meta: {
         cardId: cardIdOf(state),
         saved: library.saved.includes(cardIdOf(state)),
