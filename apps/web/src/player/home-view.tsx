@@ -171,7 +171,7 @@ export function HomeView({
         </>
       )}
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {filtered.length === 0 ? (
           query.trim() ? (
             <EmptyCopy title="검색 결과가 없습니다" detail="다른 단어로 다시 찾아 보세요." />
