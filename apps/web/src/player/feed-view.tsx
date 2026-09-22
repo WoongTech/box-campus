@@ -41,10 +41,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
   const hidden = failed.slide === slide ? failed.srcs : [];
   const images = split.images.filter((block) => !hidden.includes(block.src));
   const hasSlideImage = images.length > 0 && !showDock;
-  const readingLength =
-    (split.hero?.text.length ?? 0) + split.reading.reduce((sum, block) => sum + block.text.length, 0);
   const storyReading = !hasText && !hasChoices && !hasSlideImage;
-  const centered = storyReading && readingLength < 90;
   const choiceCount = view.control.kind === "choices" ? view.control.options.length : 0;
   const progressLabel =
     typeof view.pentadIndex === "number"
@@ -88,17 +85,17 @@ export function FeedView({ onClose }: { onClose: () => void }) {
         </p>
       ) : null}
       {split.hero ? (
-        <Hero block={split.hero} centered={centered && !hasSlideImage} caption={hasSlideImage} />
+        <Hero block={split.hero} caption={hasSlideImage} />
       ) : (
-        <h1 className="text-2xl leading-snug font-semibold tracking-tight text-balance">{state.campus.title}</h1>
+        <h1 className="text-[22px] leading-snug font-semibold tracking-tight text-balance">{state.campus.title}</h1>
       )}
       {split.reading.map((block, index) => (
-        <ReadingLine key={`${block.kind}-${index}`} block={block} centered={centered && !hasSlideImage} />
+        <ReadingLine key={`${block.kind}-${index}`} block={block} />
       ))}
       {showMetaInStrip
         ? split.meta
             .filter((block) => block.kind !== "eyebrow")
-            .map((block, index) => <MetaLine key={`${block.kind}-${index}`} block={block} centered={centered && !hasSlideImage} />)
+            .map((block, index) => <MetaLine key={`${block.kind}-${index}`} block={block} />)
         : null}
     </>
   );
@@ -199,7 +196,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
                 ? "flex min-h-full flex-col justify-end gap-3 py-4"
                 : hasChoices
                   ? "flex min-h-full flex-col justify-end gap-3 py-5"
-                  : `flex min-h-full flex-col gap-3 py-8 ${storyReading ? "justify-center" : "justify-start"} ${centered ? "text-center" : ""}`
+                  : `flex min-h-full flex-col gap-3 py-6 ${storyReading ? "justify-start" : "justify-start"}`
             }
           >
             {copy}
@@ -265,38 +262,31 @@ export function FeedView({ onClose }: { onClose: () => void }) {
 
 function Hero({
   block,
-  centered,
   caption = false,
 }: {
   block: Extract<Block, { text: string }>;
-  centered: boolean;
   caption?: boolean;
 }) {
+  // Threads-like: keep body text readable, avoid giant Instagram captions.
   const reading = caption
-    ? "text-[15px] leading-relaxed"
-    : block.text.length > 120
-      ? "text-lg leading-relaxed"
+    ? "text-[15px] leading-[1.4] font-normal"
+    : block.text.length > 160
+      ? "text-[17px] leading-[1.4] font-semibold"
       : block.text.length > 80
-        ? "text-xl leading-relaxed"
-        : block.text.length > 36
-          ? "text-2xl leading-snug"
-          : "text-3xl leading-snug";
-  return (
-    <h1 className={`${reading} break-keep font-semibold tracking-tight text-balance ${centered ? "mx-auto max-w-[22rem]" : ""}`}>
-      {block.text}
-    </h1>
-  );
+        ? "text-[19px] leading-snug font-semibold"
+        : "text-[22px] leading-snug font-semibold";
+  return <h1 className={`${reading} break-keep tracking-tight text-balance`}>{block.text}</h1>;
 }
 
-function ReadingLine({ block, centered }: { block: Extract<Block, { text: string }>; centered: boolean }) {
-  return <p className={`break-keep text-[15px] leading-relaxed text-white/85 ${centered ? "mx-auto max-w-[22rem]" : ""}`}>{block.text}</p>;
+function ReadingLine({ block }: { block: Extract<Block, { text: string }> }) {
+  return <p className="break-keep text-[15px] leading-[1.4] text-white/90">{block.text}</p>;
 }
 
-function MetaLine({ block, centered }: { block: Extract<Block, { text: string }>; centered: boolean }) {
-  const className = `break-keep text-[13px] text-white/55 ${centered ? "mx-auto max-w-[22rem]" : ""}`;
+function MetaLine({ block }: { block: Extract<Block, { text: string }> }) {
+  const className = "break-keep text-[13px] text-white/55";
   if (block.kind === "badge") {
     return (
-      <p className={centered ? "mx-auto" : ""}>
+      <p>
         <span className="inline-block rounded-full border border-white/20 px-2.5 py-0.5 text-[11px] font-medium tracking-wide text-white/70">
           {block.text}
         </span>

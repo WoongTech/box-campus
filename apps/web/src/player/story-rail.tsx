@@ -58,7 +58,7 @@ export function StoryRail({
               </span>
             </span>
             <span
-              className={`line-clamp-2 w-full text-center text-[11px] leading-tight break-keep ${
+              className={`w-full truncate text-center text-[11px] leading-tight ${
                 current ? "font-semibold text-primary" : "text-secondary"
               }`}
             >
@@ -83,8 +83,8 @@ export function StoryRail({
 
 function railLabel(name: string) {
   const head = name.split(/[:：\-–—|]/)[0]?.trim() || name.trim();
-  if (head.length <= 18) return head;
-  return `${head.slice(0, 17)}…`;
+  if (head.length <= 10) return head;
+  return `${head.slice(0, 9)}…`;
 }
 
 function titleOf(raw: string | undefined, fallback: string) {

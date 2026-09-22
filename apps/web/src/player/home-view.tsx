@@ -50,12 +50,12 @@ export function HomeView({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex shrink-0 items-center px-4 pt-[max(0.85rem,env(safe-area-inset-top))] pb-2">
+      <header className="flex shrink-0 items-center justify-center px-4 pt-[max(0.85rem,env(safe-area-inset-top))] pb-2">
         <h1 className="m-0 font-normal">
           <Wordmark />
         </h1>
       </header>
-      <div className="shrink-0 pb-2">
+      <div className="shrink-0 pb-1">
         <StoryRail
           onCompose={onCompose}
           onSelect={(id) => {
@@ -64,7 +64,17 @@ export function HomeView({
           }}
         />
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain border-t border-white/[0.08]">
+      <button
+        type="button"
+        className="flex shrink-0 items-center gap-3 border-y border-white/[0.08] px-4 py-3 text-left active:bg-white/[0.03]"
+        onClick={onCompose}
+      >
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
+          {initial}
+        </span>
+        <span className="min-w-0 flex-1 text-[15px] text-secondary">새 스토리를 적어 보세요…</span>
+      </button>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {ideaCount === 0 ? (
           <EmptyCopy title="아직 글이 없습니다" detail="추가로 이 스토리를 채우세요." onClick={onCompose} />
         ) : (
@@ -73,39 +83,39 @@ export function HomeView({
             {sections.map((section) => (
               <div key={section.key}>
                 {section.label ? (
-                  <p className="px-4 pt-4 pb-1 text-[13px] font-medium text-secondary">{section.label}</p>
+                  <p className="px-4 pt-5 pb-1 text-[12px] font-medium tracking-wide text-secondary/80">
+                    {section.label}
+                  </p>
                 ) : null}
                 {section.ideas.map((idea) => (
                   <button
                     key={idea.ideaId}
                     type="button"
-                    className={`flex w-full gap-3 border-b border-white/[0.08] px-4 py-3.5 text-left active:bg-white/[0.03] ${
+                    className={`grid w-full grid-cols-[36px_minmax(0,1fr)] gap-x-3 border-b border-white/[0.08] px-4 py-3.5 text-left active:bg-white/[0.03] ${
                       idea.current ? "bg-white/[0.03]" : ""
                     }`}
                     onClick={() => (idea.current ? onOpenStory() : onOpenIdea(post.id, idea.ideaId))}
                   >
-                    <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
+                    <span className="row-span-2 mt-0.5 flex size-9 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
                       {initial}
                     </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="flex items-center gap-2">
-                        <span className="min-w-0 flex-1 truncate text-[15px] leading-5">
-                          <span className="font-semibold text-primary">{handle}</span>
-                          <span className="text-secondary"> · {idea.meta}</span>
+                    <span className="flex min-w-0 items-baseline gap-1.5">
+                      <span className="truncate text-[15px] font-semibold leading-5 text-primary">{handle}</span>
+                      <span className="shrink-0 text-[13px] leading-5 text-secondary">· {idea.meta}</span>
+                      {idea.current ? (
+                        <span className="ml-auto shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                          이어서
                         </span>
-                        {idea.current ? (
-                          <span className="shrink-0 text-[13px] font-medium text-secondary">이어서</span>
-                        ) : null}
-                      </span>
-                      <span className="mt-1.5 block break-keep text-[15px] leading-relaxed text-primary">
-                        <span className="font-semibold">{idea.title}</span>
-                        {idea.thesis ? (
-                          <>
-                            <span className="whitespace-pre-wrap">{"\n"}</span>
-                            <span className="line-clamp-5 font-normal">{idea.thesis}</span>
-                          </>
-                        ) : null}
-                      </span>
+                      ) : null}
+                    </span>
+                    <span className="col-start-2 mt-1 min-w-0 break-keep text-[15px] leading-[1.4] text-primary">
+                      <span className="font-semibold">{idea.title}</span>
+                      {idea.thesis ? (
+                        <>
+                          <span className="whitespace-pre-wrap">{"\n"}</span>
+                          <span className="font-normal text-primary/90">{clampText(idea.thesis, 5)}</span>
+                        </>
+                      ) : null}
                     </span>
                   </button>
                 ))}
@@ -161,21 +171,19 @@ export function SavedView({ onOpenCard }: { onOpenCard: (cardId: string) => void
               >
                 <button
                   type="button"
-                  className="flex min-w-0 flex-1 gap-3 px-4 py-3.5 text-left active:bg-white/[0.03]"
+                  className="grid min-w-0 flex-1 grid-cols-[36px_minmax(0,1fr)] gap-x-3 px-4 py-3.5 text-left active:bg-white/[0.03]"
                   onClick={() => onOpenCard(item.cardId)}
                 >
-                  <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
+                  <span className="row-span-2 mt-0.5 flex size-9 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
                     {initial}
                   </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[15px] font-semibold leading-5 text-primary">
-                      {shortName(item.story)}
-                    </span>
-                    <span className="mt-1.5 block break-keep text-[15px] leading-relaxed text-primary">
-                      <span className="font-semibold">{item.topic}</span>
-                      <span className="whitespace-pre-wrap">{"\n"}</span>
-                      <span className="line-clamp-5 font-normal">{item.text}</span>
-                    </span>
+                  <span className="truncate text-[15px] font-semibold leading-5 text-primary">
+                    {shortName(item.story)}
+                  </span>
+                  <span className="col-start-2 mt-1 min-w-0 break-keep text-[15px] leading-[1.4] text-primary">
+                    <span className="font-semibold">{item.topic}</span>
+                    <span className="whitespace-pre-wrap">{"\n"}</span>
+                    <span className="font-normal text-primary/90">{clampText(item.text, 5)}</span>
                   </span>
                 </button>
                 <button
@@ -262,6 +270,14 @@ function shortName(name: string) {
   const head = name.split(/[:：\-–—|]/)[0]?.trim() || name.trim();
   if (head.length <= 18) return head;
   return `${head.slice(0, 17)}…`;
+}
+
+/** Approx. Threads-style clamp without relying on line-clamp alone for mixed weight. */
+function clampText(text: string, lines: number) {
+  const max = lines * 42;
+  const trimmed = text.trim();
+  if (trimmed.length <= max) return trimmed;
+  return `${trimmed.slice(0, max - 1).trimEnd()}…`;
 }
 
 type SavedItem = { cardId: string; story: string; topic: string; text: string };
