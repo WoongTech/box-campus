@@ -73,8 +73,8 @@ export function StoryRail({
 
 function railLabel(name: string) {
   const head = name.split(/[:：\-–—|]/)[0]?.trim() || name.trim();
-  if (head.length <= 12) return head;
-  return `${head.slice(0, 11)}…`;
+  if (head.length <= 18) return head;
+  return `${head.slice(0, 17)}…`;
 }
 
 function titleOf(raw: string | undefined, fallback: string) {

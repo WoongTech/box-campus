@@ -622,13 +622,13 @@ function projectCardView(state, encounter) {
       weekLabel: null,
       pentadIndex: null,
       blocks: [
-        { kind: "title", text: "이 주제의 장을 다 봤습니다" },
+        { kind: "title", text: "이 카드뉴스를 다 봤습니다" },
         {
           kind: "body",
-          text: "다른 주제로 이어가거나, 저장한 장을 다시 열 수 있습니다. 새 장은 주제를 적거나 묶음을 붙여 넣습니다.",
+          text: "홈에서 다른 편을 고르거나, 저장해 둔 카드를 다시 열 수 있습니다.",
         },
       ],
-      control: { kind: "advance", label: "주제 갤러리" },
+      control: { kind: "advance", label: "홈으로" },
       dayCount: state.progress.dayPulse.completed,
       authorBrief: state.authorBrief,
     };

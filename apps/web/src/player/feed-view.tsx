@@ -92,7 +92,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
           {Array.from({ length: 4 }, (_, index) => (
             <span key={index} className="h-[3px] flex-1 overflow-hidden rounded-full bg-white/25">
               <span
-                className={`block h-full rounded-full bg-white ${index <= view.pentadIndex! ? "w-full" : "w-0"}`}
+                className={`block h-full rounded-full bg-white transition-[width] duration-200 ${index <= view.pentadIndex! ? "w-full" : "w-0"}`}
               />
             </span>
           ))}
@@ -110,7 +110,9 @@ export function FeedView({ onClose }: { onClose: () => void }) {
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[14px] font-semibold leading-tight">{ideaTitle || state.campus.title}</p>
-          {ideaTitle ? <p className="truncate text-[11px] text-white/60">{state.campus.title}</p> : null}
+          {ideaTitle ? (
+            <p className="truncate text-[11px] text-white/60">{shortCampus(state.campus.title)}</p>
+          ) : null}
         </div>
         {meta.cardId ? (
           <button
@@ -162,7 +164,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
               />
             ))}
           </div>
-          <div className="max-h-[42%] shrink-0 space-y-2 overflow-y-auto overscroll-contain border-t border-white/10 bg-black px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+          <div className="max-h-[42%] shrink-0 space-y-2 overflow-y-auto overscroll-contain border-t border-white/10 bg-black px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]" data-story-scroll>
             {copy}
           </div>
         </div>
@@ -170,6 +172,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
         <div
           key={`${frame.transitionId}-${nav}`}
           className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 ${showDock ? "pb-3" : "pb-[max(1.5rem,env(safe-area-inset-bottom))]"}`}
+          data-story-scroll
         >
           <div
             className={
@@ -198,7 +201,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
                 <button
                   key={option.actionId}
                   type="button"
-                  className="min-h-11 w-full rounded-full border border-white/15 bg-white/10 px-4 py-2.5 text-left text-[15px] leading-snug break-keep"
+                  className="min-h-11 w-full rounded-full border border-white/15 bg-white/10 px-4 py-2.5 text-left text-[15px] leading-snug break-keep active:bg-white/20"
                   onClick={() =>
                     actions.dispatch({
                       kind: "activate",
@@ -223,7 +226,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
             />
           ) : null}
           {view.role === "hub" ? (
-            <button type="button" className="min-h-11 w-full rounded-full bg-white text-sm font-semibold text-black" onClick={onClose}>
+            <button type="button" className="min-h-11 w-full rounded-full bg-white text-sm font-semibold text-black active:bg-white/90" onClick={onClose}>
               홈
             </button>
           ) : null}
@@ -287,6 +290,12 @@ function MetaLine({ block, centered }: { block: Extract<Block, { text: string }>
     );
   }
   return <p className={className}>{block.text}</p>;
+}
+
+function shortCampus(name: string) {
+  const head = name.split(/[:：\-–—|]/)[0]?.trim() || name.trim();
+  if (head.length <= 22) return head;
+  return `${head.slice(0, 21)}…`;
 }
 
 function TextStep({

@@ -63,7 +63,7 @@ export function HomeView({
               <button
                 key={idea.ideaId}
                 type="button"
-                className={`flex w-full gap-3 border-b border-white/10 px-4 py-3 text-left active:bg-white/5 ${idea.current ? "bg-white/[0.04]" : ""}`}
+                className={`flex w-full gap-3 border-b border-white/10 px-4 py-2.5 text-left active:bg-white/5 ${idea.current ? "bg-white/[0.04]" : ""}`}
                 onClick={() => (idea.current ? onOpenStory() : onOpenIdea(post.id, idea.ideaId))}
               >
                 <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
@@ -75,18 +75,24 @@ export function HomeView({
                       <span className="font-semibold">{shortName(post.title)}</span>
                       <span className="text-secondary"> · {idea.meta}</span>
                     </span>
-                    {idea.current ? <span className="shrink-0 text-[12px] font-medium text-white/70">이어서</span> : null}
+                    {idea.current ? (
+                      <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-white/80">
+                        이어서
+                      </span>
+                    ) : null}
                   </span>
                   <span className="mt-1 block break-keep text-[15px] font-semibold leading-snug text-primary">{idea.title}</span>
                   {idea.thesis ? (
-                    <span className="mt-1 line-clamp-3 block break-keep text-[15px] leading-relaxed text-primary/90">{idea.thesis}</span>
+                    <span className="mt-1 line-clamp-2 block break-keep text-[14px] leading-relaxed text-secondary">
+                      {idea.thesis}
+                    </span>
                   ) : null}
                 </span>
               </button>
             ))}
             <button
               type="button"
-              className="w-full py-5 text-center text-[12px] text-secondary/80"
+              className="w-full py-5 text-center text-[12px] text-secondary/80 active:text-secondary"
               onClick={() => actions.dispatch({ kind: "reset-sample", raw: state.campus })}
             >
               이 스토리 처음부터
@@ -120,7 +126,7 @@ export function SavedView({ onOpenCard }: { onOpenCard: (cardId: string) => void
             <button
               key={item.cardId}
               type="button"
-              className="flex w-full gap-3 border-b border-white/10 px-4 py-3 text-left active:bg-white/5"
+              className="flex w-full gap-3 border-b border-white/10 px-4 py-2.5 text-left active:bg-white/5"
               onClick={() => onOpenCard(item.cardId)}
             >
               <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
@@ -131,7 +137,7 @@ export function SavedView({ onOpenCard }: { onOpenCard: (cardId: string) => void
                   <span className="font-semibold">{shortName(item.story)}</span>
                 </span>
                 <span className="mt-1 block break-keep text-[15px] font-semibold leading-snug text-primary">{item.topic}</span>
-                <span className="mt-1 line-clamp-3 block break-keep text-[15px] leading-relaxed text-primary/90">{item.text}</span>
+                <span className="mt-1 line-clamp-2 block break-keep text-[14px] leading-relaxed text-secondary">{item.text}</span>
               </span>
             </button>
           ))

@@ -435,10 +435,12 @@ export function CampusProvider({ children }: { children: ReactNode }) {
       if (!current || !shelf) return;
       const cardId = cardIdOf(current);
       if (!cardId) return;
-      const saved = shelf.saved.includes(cardId)
-        ? shelf.saved.filter((id) => id !== cardId)
-        : [...shelf.saved, cardId];
+      const saving = !shelf.saved.includes(cardId);
+      const saved = saving
+        ? [...shelf.saved, cardId]
+        : shelf.saved.filter((id) => id !== cardId);
       writeLibrary({ ...shelf, saved });
+      toast(saving ? "저장했습니다" : "저장을 해제했습니다");
     }
 
     return {

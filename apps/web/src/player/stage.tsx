@@ -22,6 +22,26 @@ function isTextFieldFocused() {
   return tag === "INPUT" || tag === "TEXTAREA" || active.getAttribute("contenteditable") === "true";
 }
 
+function scrollConsumesDelta(target: EventTarget | null, deltaY: number) {
+  if (!(target instanceof Element) || deltaY === 0) return false;
+  let node: Element | null = target;
+  while (node && node !== document.body) {
+    if (node instanceof HTMLElement) {
+      const style = window.getComputedStyle(node);
+      const overflowY = style.overflowY;
+      const canScroll =
+        (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") &&
+        node.scrollHeight > node.clientHeight + 1;
+      if (canScroll) {
+        if (deltaY > 0 && node.scrollTop + node.clientHeight < node.scrollHeight - 1) return true;
+        if (deltaY < 0 && node.scrollTop > 1) return true;
+      }
+    }
+    node = node.parentElement;
+  }
+  return false;
+}
+
 export function Stage() {
   const { frame, actions, state } = useCampus();
   const { locked: fieldLocked } = useInteractionLock();
@@ -122,6 +142,10 @@ export function Stage() {
         const deltaY = startY.current - endY;
         const deltaX = endX - startX.current;
         if (Math.abs(deltaX) < 48 && Math.abs(deltaY) < 48) return;
+        if (Math.abs(deltaY) >= Math.abs(deltaX) && scrollConsumesDelta(event.target, deltaY)) {
+          skipClick.current = true;
+          return;
+        }
         skipClick.current = true;
         if (deltaY < -48 && Math.abs(deltaY) > Math.abs(deltaX)) {
           exitStory();
@@ -133,6 +157,7 @@ export function Stage() {
       onWheel={(event) => {
         if (interactionBlocked || isTextFieldFocused() || wheelLock.current) return;
         if (Math.abs(event.deltaY) < 48) return;
+        if (scrollConsumesDelta(event.target, event.deltaY)) return;
         wheelLock.current = true;
         if (event.deltaY < 0) goBack();
         else goNext();
