@@ -39,7 +39,6 @@ type FeedRow = {
   meta: string;
   current: boolean;
   weekLabel: string;
-  thread: "solo" | "start" | "mid" | "end";
 };
 
 export function HomeView({
@@ -126,16 +125,7 @@ export function HomeView({
             className="h-10 w-full rounded-full border border-white/15 bg-white/5 px-4 text-[15px] text-primary outline-none placeholder:text-secondary"
           />
         </div>
-      ) : (
-        <button
-          type="button"
-          className="flex shrink-0 items-center gap-3 border-b border-white/[0.08] px-4 py-3 text-left active:bg-white/[0.03]"
-          onClick={onCompose}
-        >
-          <StoryMark seed={active.id} size={36} />
-          <span className="min-w-0 flex-1 text-[15px] text-secondary">새 스토리를 적어 보세요…</span>
-        </button>
-      )}
+      ) : null}
 
       <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {filtered.length === 0 ? (
@@ -147,35 +137,18 @@ export function HomeView({
         ) : (
           <section>
             <h2 className="sr-only">글 모음</h2>
-            {filtered.map((row, index) => {
-              const prev = filtered[index - 1];
-              const showWeek =
-                Boolean(row.weekLabel) &&
-                (!prev || prev.campusId !== row.campusId || prev.weekLabel !== row.weekLabel);
+            {filtered.map((row) => {
               const saved = library.saved.includes(row.cardId);
               return (
                 <div key={row.key}>
-                  {showWeek ? (
-                    <p className="px-4 pt-4 pb-1 text-[12px] font-medium tracking-wide text-secondary/80">
-                      {row.campusId === active.id ? row.weekLabel : `${row.handle} · ${row.weekLabel}`}
-                    </p>
-                  ) : null}
                   <article
                     className={`grid grid-cols-[36px_minmax(0,1fr)] gap-x-3 border-b border-white/[0.08] px-4 pt-3.5 ${
                       row.current ? "bg-white/[0.03]" : ""
                     }`}
                   >
-                    <div className="relative flex flex-col items-center">
-                      <span className="z-10">
-                        <StoryMark seed={row.campusId} size={36} title={row.handle} />
-                      </span>
-                      {row.thread === "start" || row.thread === "mid" ? (
-                        <span className="absolute top-9 bottom-0 w-px bg-white/15" aria-hidden />
-                      ) : null}
-                      {row.thread === "end" || row.thread === "mid" ? (
-                        <span className="absolute top-0 h-1 w-px bg-white/15" aria-hidden />
-                      ) : null}
-                    </div>
+                    <span className="mt-0.5">
+                      <StoryMark seed={row.campusId} size={36} title={row.handle} />
+                    </span>
                     <div className="min-w-0 pb-2">
                       <button
                         type="button"
@@ -188,7 +161,9 @@ export function HomeView({
                           <span className="truncate text-[15px] font-semibold leading-5 text-primary">
                             {row.handle}
                           </span>
-                          <span className="shrink-0 text-[13px] leading-5 text-secondary">· {row.meta}</span>
+                          {row.meta ? (
+                            <span className="shrink-0 text-[13px] leading-5 text-secondary">· {row.meta}</span>
+                          ) : null}
                           {row.current ? (
                             <span className="ml-auto shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-primary">
                               이어서
@@ -383,15 +358,13 @@ function campusFromDump(raw: string | undefined): StoryPost | null {
 function rowsForPost(post: StoryPost, activeIdeaId: string, activeCampusId: string): FeedRow[] {
   const rows: FeedRow[] = [];
   for (const week of post.weeks) {
-    const weekRows: FeedRow[] = [];
     for (const ideaId of week.ideaIds) {
       const idea = post.ideas.find((item) => item.id === ideaId);
       const thesisCard =
         post.cards.find((card) => card.ideaId === ideaId && card.thesis) ??
         post.cards.find((card) => card.ideaId === ideaId);
-      const meta =
-        post.format === "volume" ? "카드뉴스" : post.format === "series" ? week.title : `${week.number}주`;
-      weekRows.push({
+      const meta = post.format === "volume" ? "카드뉴스" : post.format === "series" ? week.title : "";
+      rows.push({
         key: `${post.id}:${ideaId}`,
         campusId: post.id,
         handle: shortName(post.title),
@@ -401,22 +374,9 @@ function rowsForPost(post: StoryPost, activeIdeaId: string, activeCampusId: stri
         thesis: thesisCard?.thesis ?? "",
         meta,
         current: post.id === activeCampusId && ideaId === activeIdeaId,
-        weekLabel: post.format === "course" ? `${week.number}주 · ${week.title}` : week.title,
-        thread: "solo",
+        weekLabel: week.title,
       });
     }
-    const marked = weekRows.map((row, index) => ({
-      ...row,
-      thread:
-        weekRows.length === 1
-          ? ("solo" as const)
-          : index === 0
-            ? ("start" as const)
-            : index === weekRows.length - 1
-              ? ("end" as const)
-              : ("mid" as const),
-    }));
-    rows.push(...marked);
   }
   return rows;
 }
@@ -434,7 +394,7 @@ function buildTimeline(active: StoryPost, library: Library, activeIdeaId: string
     other.push(...rowsForPost(post, "", active.id));
   }
 
-  return [...(continueRow ? [{ ...continueRow, thread: "solo" as const }] : []), ...restActive, ...other];
+  return [...(continueRow ? [continueRow] : []), ...restActive, ...other];
 }
 
 function shortName(name: string) {
