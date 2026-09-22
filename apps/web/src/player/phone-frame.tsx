@@ -1,6 +1,10 @@
 import type { ComponentProps, ReactNode } from "react";
 
-/** Full-screen PWA shell. Flex column so the tab bar is in normal flow, not absolute. */
+/**
+ * Learner shell — same model as before Astryx: document-flow `h-dvh`, not
+ * `position:fixed` on html/body (that fought Safari/Chrome chrome and left
+ * black bands). Astryx stays for tokens/components only.
+ */
 export function PhoneFrame({
   children,
   className,
@@ -8,7 +12,7 @@ export function PhoneFrame({
 }: { children: ReactNode } & ComponentProps<"main">) {
   return (
     <main
-      className={`fixed inset-0 flex w-full flex-col overflow-hidden bg-black text-primary ${className ?? ""}`}
+      className={`relative mx-auto flex h-dvh w-full max-w-[390px] flex-col overflow-hidden bg-black text-primary ${className ?? ""}`}
       {...rest}
     >
       {children}

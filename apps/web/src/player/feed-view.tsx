@@ -85,7 +85,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
   return (
     <section className="relative flex h-full min-h-0 flex-col bg-black">
       {typeof view.pentadIndex === "number" ? (
-        <div className="app-sat pointer-events-none flex shrink-0 gap-1 px-3" aria-hidden>
+        <div className="pointer-events-none flex shrink-0 gap-1 px-3 pt-[max(0.85rem,env(safe-area-inset-top))]" aria-hidden>
           {Array.from({ length: 4 }, (_, index) => (
             <span key={index} className="h-[3px] flex-1 overflow-hidden rounded-full bg-white/25">
               <span
@@ -95,7 +95,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
           ))}
         </div>
       ) : (
-        <div className="app-sat shrink-0" />
+        <div className="shrink-0 pt-[max(0.85rem,env(safe-area-inset-top))]" />
       )}
 
       <div
@@ -162,7 +162,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
             ))}
           </div>
           <div
-            className="app-sab max-h-[42%] shrink-0 space-y-2 overflow-y-auto overscroll-contain border-t border-white/10 bg-black px-5 pt-4"
+            className="max-h-[42%] shrink-0 space-y-2 overflow-y-auto overscroll-contain border-t border-white/10 bg-black px-5 pt-4 pb-[env(safe-area-inset-bottom)]"
             data-story-scroll
           >
             {copy}
@@ -171,7 +171,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
       ) : (
         <div
           key={`${frame.transitionId}-${nav}`}
-          className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 ${showDock ? "pb-3" : "app-sab"}`}
+          className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 ${showDock ? "pb-3" : "pb-[env(safe-area-inset-bottom)]"}`}
           data-story-scroll
         >
           <div
@@ -190,7 +190,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
 
       {showDock ? (
         <div
-          className={`app-sab z-10 shrink-0 space-y-2 border-t border-white/10 bg-black px-4 pt-3 ${
+          className={`z-10 shrink-0 space-y-2 border-t border-white/10 bg-black px-4 pt-3 pb-[env(safe-area-inset-bottom)] ${
             choiceCount > 3 ? "max-h-[46%] overflow-y-auto overscroll-contain" : ""
           }`}
           onClick={(event) => event.stopPropagation()}

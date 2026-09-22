@@ -16,7 +16,7 @@ export function TabBar({
   onCompose: () => void;
 }) {
   return (
-    <nav className="app-tabbar z-30 shrink-0 border-t border-white/10 bg-black">
+    <nav className="z-30 shrink-0 border-t border-white/10 bg-black pb-[env(safe-area-inset-bottom)]">
       <div className="grid h-12 grid-cols-3">
         <TabButton label="홈" current={tab === "home"} onClick={onHome} name="home" />
         <TabButton label="추가" onClick={onCompose} name="plus" />

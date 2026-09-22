@@ -6,72 +6,11 @@
 @import "@astryxdesign/core/tailwind-theme.css";
 @import "tailwindcss/utilities.css" layer(utilities);
 
-@layer utilities {
-  :root {
-    --sat: 0px;
-    --sab: 0px;
-  }
-
+@layer base {
   html,
   body {
-    position: fixed;
-    inset: 0;
-    width: 100%;
     margin: 0;
-    height: 100%;
-    overflow: hidden;
-    overscroll-behavior: none;
     background: #000000;
+    overscroll-behavior: none;
   }
-
-  dialog {
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    max-height: none !important;
-  }
-}
-
-/*
- * Browser tabs: comfort padding only. Safari/Chrome already inset the page,
- * and env(safe-area-*) still returns notch/home-indicator values with
- * viewport-fit=cover — that double-counts and leaves black bands.
- * Installed PWA (standalone): add real env() insets.
- */
-.app-sat {
-  padding-top: 0.35rem;
-}
-
-.app-sab {
-  padding-bottom: 0.5rem;
-}
-
-.app-tabbar {
-  padding-bottom: 0.5rem;
-}
-
-@media (display-mode: standalone), (display-mode: fullscreen) {
-  .app-sat {
-    padding-top: calc(0.35rem + env(safe-area-inset-top, 0px));
-  }
-
-  .app-sab {
-    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
-  }
-
-  .app-tabbar {
-    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
-  }
-}
-
-html.app-standalone .app-sat {
-  padding-top: calc(0.35rem + env(safe-area-inset-top, 0px));
-}
-
-html.app-standalone .app-sab {
-  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
-}
-
-html.app-standalone .app-tabbar {
-  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
 }
