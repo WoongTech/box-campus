@@ -497,3 +497,37 @@ test("a card can carry an https image and rejects other addresses", () => {
     (error: unknown) => error === "캠퍼스 묶음: 사진은 https 주소여야 합니다.",
   );
 });
+
+test("decorative lecture covers and YouTube thumbs are dropped", () => {
+  const sample = structuredClone(BOX_CAMPUS_SAMPLE);
+  const campus = parseCampus({
+    ...sample,
+    cards: sample.cards.map((card) =>
+      card.id === "lib-a"
+        ? {
+            ...card,
+            image: {
+              src: "https://img.youtube.com/vi/xxfMT-bPEmU/hqdefault.jpg",
+              alt: "강의 표지",
+            },
+          }
+        : card.id === "lib-b"
+          ? {
+              ...card,
+              image: {
+                src: "https://i.ytimg.com/vi/abc/hqdefault.jpg",
+                alt: "연결 도식",
+              },
+            }
+          : card,
+    ),
+  });
+  assert.equal(
+    (campus.cards.find((item) => item.id === "lib-a") as { image?: unknown }).image,
+    undefined,
+  );
+  assert.equal(
+    (campus.cards.find((item) => item.id === "lib-b") as { image?: unknown }).image,
+    undefined,
+  );
+});

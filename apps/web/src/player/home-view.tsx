@@ -48,10 +48,7 @@ export function HomeView({
         <StoryRail
           onCompose={onCompose}
           onSelect={(id) => {
-            if (id !== state.campus.id) {
-              actions.openAccount(id);
-              return;
-            }
+            if (id !== state.campus.id) actions.openAccount(id);
             onOpenStory();
           }}
         />
@@ -132,7 +129,7 @@ export function SavedView({ onOpenCard }: { onOpenCard: (cardId: string) => void
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[13px] font-semibold">{shortName(item.story)}</span>
                 <span className="mt-0.5 block truncate text-[12px] text-secondary">{item.topic}</span>
-                <span className="mt-1.5 line-clamp-3 block text-[15px] leading-relaxed text-primary">{item.text}</span>
+                <span className="mt-1.5 line-clamp-3 block break-keep text-[15px] leading-relaxed text-primary">{item.text}</span>
               </span>
             </button>
           ))

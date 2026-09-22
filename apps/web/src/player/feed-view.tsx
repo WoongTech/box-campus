@@ -29,7 +29,8 @@ export function FeedView({ onClose }: { onClose: () => void }) {
   const hasSlideImage = images.length > 0 && !showDock;
   const readingLength =
     (split.hero?.text.length ?? 0) + split.reading.reduce((sum, block) => sum + block.text.length, 0);
-  const centered = !hasText && !hasSlideImage && readingLength < 90;
+  const storyReading = !hasText && !hasChoices && !hasSlideImage;
+  const centered = storyReading && readingLength < 90;
 
   function hideImage(src: string) {
     setFailed((current) => {
@@ -137,21 +138,25 @@ export function FeedView({ onClose }: { onClose: () => void }) {
       </div>
 
       {hasSlideImage ? (
-        <div key={`${frame.transitionId}-${nav}`} className="relative min-h-0 flex-1">
-          {images.map((block) => (
-            <img
-              key={block.src}
-              src={block.src}
-              alt={block.alt}
-              draggable={false}
-              className="absolute inset-0 size-full object-contain bg-black"
-              onError={() => hideImage(block.src)}
-            />
-          ))}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/90 to-transparent pt-28">
-            <div className="pointer-events-auto max-h-[42%] space-y-2 overflow-y-auto overscroll-contain px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-              {copy}
-            </div>
+        <div key={`${frame.transitionId}-${nav}`} className="flex min-h-0 flex-1 flex-col">
+          <div className="flex min-h-0 flex-1 items-end justify-center overflow-hidden bg-black px-2 pb-2">
+            {images.map((block) => (
+              <img
+                key={block.src}
+                src={block.src}
+                alt={block.alt}
+                draggable={false}
+                className="max-h-full max-w-full object-contain"
+                onError={() => hideImage(block.src)}
+                onLoad={(event) => {
+                  const img = event.currentTarget;
+                  if (img.naturalWidth < 2 || img.naturalHeight < 2) hideImage(block.src);
+                }}
+              />
+            ))}
+          </div>
+          <div className="max-h-[42%] shrink-0 space-y-2 overflow-y-auto overscroll-contain border-t border-white/10 bg-black px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+            {copy}
           </div>
         </div>
       ) : (
@@ -165,7 +170,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
                 ? "flex min-h-full flex-col justify-end gap-3 py-4"
                 : hasChoices
                   ? "flex min-h-full flex-col justify-center gap-4 py-6"
-                  : `flex min-h-full flex-col gap-3 py-8 ${centered ? "justify-center text-center" : "justify-start"}`
+                  : `flex min-h-full flex-col gap-3 py-8 ${storyReading ? "justify-center" : "justify-start"} ${centered ? "text-center" : ""}`
             }
           >
             {copy}
@@ -250,6 +255,15 @@ function ReadingLine({ block, centered }: { block: Extract<Block, { text: string
 
 function MetaLine({ block, centered }: { block: Extract<Block, { text: string }>; centered: boolean }) {
   const className = `text-[13px] text-white/55 ${centered ? "mx-auto max-w-[22rem]" : ""}`;
+  if (block.kind === "badge") {
+    return (
+      <p className={centered ? "mx-auto" : ""}>
+        <span className="inline-block rounded-full border border-white/20 px-2.5 py-0.5 text-[11px] font-medium tracking-wide text-white/70">
+          {block.text}
+        </span>
+      </p>
+    );
+  }
   if (block.kind === "source" && block.href) {
     return (
       <a

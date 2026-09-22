@@ -48,10 +48,30 @@ function optionalImage(card) {
   if (!isObject(card.image)) throw "캠퍼스 묶음: 사진 형식이 잘못되었습니다.";
   var src = nonEmptyString(card.image.src, "사진 주소");
   if (src.indexOf("https://") !== 0) throw "캠퍼스 묶음: 사진은 https 주소여야 합니다.";
-  return {
-    src: src,
-    alt: nonEmptyString(card.image.alt, "사진 설명"),
-  };
+  var alt = nonEmptyString(card.image.alt, "사진 설명");
+  // Soft-drop decorative covers so existing packs still load as text slides.
+  if (isDecorativeImage(src, alt)) return null;
+  return { src: src, alt: alt };
+}
+
+function isDecorativeImage(src, alt) {
+  var host = src.toLowerCase();
+  if (
+    host.indexOf("img.youtube.com/") !== -1 ||
+    host.indexOf("i.ytimg.com/") !== -1 ||
+    host.indexOf("img.youtube.com%") !== -1
+  ) {
+    return true;
+  }
+  var label = String(alt || "").toLowerCase();
+  if (
+    /강의\s*표지|발표\s*표지|썸네일|title\s*card|lecture\s*cover|stock\s*photo/.test(
+      label,
+    )
+  ) {
+    return true;
+  }
+  return false;
 }
 
 function nonEmptyString(v, field) {
@@ -886,7 +906,7 @@ function buildAuthorBrief(answers) {
     "위 설정으로 묶음을 만드세요. format은 course, volume, series 중 주제에 맞는 것.",
     "아이디어마다 네 장: 핵심 문장, 질문, 고칠 문장, 다른 분야 비유.",
     "사진은 기본으로 넣지 마세요. 문장이 가리키는 도식·표·원문 캡처만 image에 넣으세요.",
-    "장식 사진과 무관한 스크린샷은 빼세요. 사실을 지어내지 마세요.",
+    "장식 사진, 발표·강의 표지 썸네일, YouTube 썸네일, 무관한 스크린샷은 빼세요. 사실을 지어내지 마세요.",
   ].join("\n");
 }
 
