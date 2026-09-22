@@ -196,7 +196,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
                 ? "flex min-h-full flex-col justify-end gap-3 py-4"
                 : hasChoices
                   ? "flex min-h-full flex-col justify-end gap-3 py-5"
-                  : `flex min-h-full flex-col gap-3 py-6 ${storyReading ? "justify-start" : "justify-start"}`
+                  : "flex min-h-full flex-col gap-3 py-6 justify-start"
             }
           >
             {copy}
