@@ -20,7 +20,7 @@ export function StoryRail({
   });
 
   return (
-    <div className="flex items-start gap-3 overflow-x-auto px-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="flex items-start gap-3.5 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {ordered.map((id) => {
         const name = id === state.campus.id ? state.campus.title : titleOf(library.shelves[id], "스토리");
         const current = id === state.campus.id;
@@ -28,7 +28,7 @@ export function StoryRail({
           <button
             key={id}
             type="button"
-            className="flex w-[4.25rem] shrink-0 flex-col items-center gap-1.5"
+            className="flex w-[4.5rem] shrink-0 flex-col items-center gap-1.5"
             aria-current={current ? "true" : undefined}
             aria-label={name}
             onClick={() => {
@@ -40,10 +40,10 @@ export function StoryRail({
               className={`rounded-full p-[2px] ${
                 current
                   ? "bg-[conic-gradient(from_210deg,#f9ce34,#ee2a7b,#6228d7,#f9ce34)]"
-                  : "bg-white/25"
+                  : "bg-white/20"
               }`}
             >
-              <span className="flex size-14 items-center justify-center rounded-full bg-body text-base font-semibold">
+              <span className="flex size-[3.75rem] items-center justify-center rounded-full bg-body text-[15px] font-semibold">
                 {name.trim().slice(0, 1) || "스"}
               </span>
             </span>
@@ -58,10 +58,10 @@ export function StoryRail({
         );
       })}
       {onCompose ? (
-        <button type="button" className="flex w-[4.25rem] shrink-0 flex-col items-center gap-1.5" aria-label="추가" onClick={onCompose}>
+        <button type="button" className="flex w-[4.5rem] shrink-0 flex-col items-center gap-1.5" aria-label="추가" onClick={onCompose}>
           <span className="p-[2px]">
-            <span className="flex size-14 items-center justify-center rounded-full border border-white/25 text-primary">
-              <AppIcon name="plus" size={22} />
+            <span className="flex size-[3.75rem] items-center justify-center rounded-full border border-white/25 text-primary">
+              <AppIcon name="plus" size={24} />
             </span>
           </span>
           <span className="text-[11px] leading-tight text-secondary">추가</span>

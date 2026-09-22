@@ -36,15 +36,16 @@ export function HomeView({
   const post = activePost(state);
   const ideas = feedIdeas(post, activeIdeaId);
   const initial = post.title.trim().slice(0, 1) || "스";
+  const handle = shortName(post.title);
 
   return (
     <div className="flex h-full min-h-0 flex-col pb-[var(--tab-bar-height)]">
-      <header className="flex shrink-0 items-center border-b border-white/10 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
+      <header className="flex shrink-0 items-center px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2">
         <h1 className="m-0 font-normal">
           <Wordmark />
         </h1>
       </header>
-      <div className="shrink-0 border-b border-white/10 pt-3 pb-3">
+      <div className="shrink-0 pb-2">
         <StoryRail
           onCompose={onCompose}
           onSelect={(id) => {
@@ -53,9 +54,9 @@ export function HomeView({
           }}
         />
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain border-t border-white/[0.08]">
         {ideas.length === 0 ? (
-          <EmptyCopy title="아직 카드뉴스가 없습니다" detail="추가로 이 스토리를 채우세요." onClick={onCompose} />
+          <EmptyCopy title="아직 글이 없습니다" detail="추가로 이 스토리를 채우세요." onClick={onCompose} />
         ) : (
           <section>
             <h2 className="sr-only">{post.title}</h2>
@@ -63,36 +64,39 @@ export function HomeView({
               <button
                 key={idea.ideaId}
                 type="button"
-                className={`flex w-full gap-3 border-b border-white/10 px-4 py-2.5 text-left active:bg-white/5 ${idea.current ? "bg-white/[0.04]" : ""}`}
+                className={`flex w-full gap-3 border-b border-white/[0.08] px-4 py-3.5 text-left active:bg-white/[0.03] ${
+                  idea.current ? "bg-white/[0.03]" : ""
+                }`}
                 onClick={() => (idea.current ? onOpenStory() : onOpenIdea(post.id, idea.ideaId))}
               >
                 <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
                   {initial}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="flex items-baseline justify-between gap-3">
-                    <span className="min-w-0 truncate text-[13px]">
-                      <span className="font-semibold">{shortName(post.title)}</span>
+                  <span className="flex items-center gap-2">
+                    <span className="min-w-0 flex-1 truncate text-[15px] leading-5">
+                      <span className="font-semibold text-primary">{handle}</span>
                       <span className="text-secondary"> · {idea.meta}</span>
                     </span>
                     {idea.current ? (
-                      <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-white/80">
-                        이어서
-                      </span>
+                      <span className="shrink-0 text-[13px] font-medium text-secondary">이어서</span>
                     ) : null}
                   </span>
-                  <span className="mt-1 block break-keep text-[15px] font-semibold leading-snug text-primary">{idea.title}</span>
-                  {idea.thesis ? (
-                    <span className="mt-1 line-clamp-2 block break-keep text-[14px] leading-relaxed text-secondary">
-                      {idea.thesis}
-                    </span>
-                  ) : null}
+                  <span className="mt-1.5 block break-keep text-[15px] leading-relaxed text-primary">
+                    <span className="font-semibold">{idea.title}</span>
+                    {idea.thesis ? (
+                      <>
+                        <span className="whitespace-pre-wrap">{"\n"}</span>
+                        <span className="line-clamp-5 font-normal">{idea.thesis}</span>
+                      </>
+                    ) : null}
+                  </span>
                 </span>
               </button>
             ))}
             <button
               type="button"
-              className="w-full py-5 text-center text-[12px] text-secondary/80 active:text-secondary"
+              className="w-full py-6 text-center text-[13px] text-secondary active:text-primary"
               onClick={() => actions.dispatch({ kind: "reset-sample", raw: state.campus })}
             >
               이 스토리 처음부터
@@ -111,36 +115,41 @@ export function SavedView({ onOpenCard }: { onOpenCard: (cardId: string) => void
   const items = library.saved
     .map((cardId) => previewSaved(cardId, state.campus.title, cards, ideas, library))
     .filter((item): item is SavedItem => item !== null);
-  const initial = state.campus.title.trim().slice(0, 1) || "스";
 
   return (
     <div className="flex h-full min-h-0 flex-col pb-[var(--tab-bar-height)]">
-      <header className="flex shrink-0 items-center border-b border-white/10 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
-        <h1 className="flex h-6 items-center text-[15px] font-semibold tracking-tight">저장</h1>
+      <header className="flex shrink-0 items-center border-b border-white/[0.08] px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
+        <h1 className="flex h-6 items-center text-[17px] font-bold tracking-tight">저장</h1>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {items.length === 0 ? (
-          <EmptyCopy title="저장한 카드가 없습니다" detail="스토리에서 표시해 두면 여기에 모입니다." />
+          <EmptyCopy title="저장한 글이 없습니다" detail="스토리에서 표시해 두면 여기에 모입니다." />
         ) : (
-          items.map((item) => (
-            <button
-              key={item.cardId}
-              type="button"
-              className="flex w-full gap-3 border-b border-white/10 px-4 py-2.5 text-left active:bg-white/5"
-              onClick={() => onOpenCard(item.cardId)}
-            >
-              <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
-                {initial}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[13px]">
-                  <span className="font-semibold">{shortName(item.story)}</span>
+          items.map((item) => {
+            const initial = item.story.trim().slice(0, 1) || "스";
+            return (
+              <button
+                key={item.cardId}
+                type="button"
+                className="flex w-full gap-3 border-b border-white/[0.08] px-4 py-3.5 text-left active:bg-white/[0.03]"
+                onClick={() => onOpenCard(item.cardId)}
+              >
+                <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
+                  {initial}
                 </span>
-                <span className="mt-1 block break-keep text-[15px] font-semibold leading-snug text-primary">{item.topic}</span>
-                <span className="mt-1 line-clamp-2 block break-keep text-[14px] leading-relaxed text-secondary">{item.text}</span>
-              </span>
-            </button>
-          ))
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[15px] font-semibold leading-5 text-primary">
+                    {shortName(item.story)}
+                  </span>
+                  <span className="mt-1.5 block break-keep text-[15px] leading-relaxed text-primary">
+                    <span className="font-semibold">{item.topic}</span>
+                    <span className="whitespace-pre-wrap">{"\n"}</span>
+                    <span className="line-clamp-5 font-normal">{item.text}</span>
+                  </span>
+                </span>
+              </button>
+            );
+          })
         )}
       </div>
     </div>
@@ -195,8 +204,8 @@ function feedIdeas(post: StoryPost, activeIdeaId: string): FeedIdea[] {
 
 function shortName(name: string) {
   const head = name.split(/[:：\-–—|]/)[0]?.trim() || name.trim();
-  if (head.length <= 16) return head;
-  return `${head.slice(0, 15)}…`;
+  if (head.length <= 18) return head;
+  return `${head.slice(0, 17)}…`;
 }
 
 type SavedItem = { cardId: string; story: string; topic: string; text: string };
@@ -242,8 +251,8 @@ function EmptyCopy({ title, detail, onClick }: { title: string; detail: string; 
   const className = "w-full px-8 py-16 text-center";
   const body = (
     <>
-      <span className="block text-[15px] font-medium">{title}</span>
-      <span className="mt-1 block text-[13px] leading-relaxed text-secondary">{detail}</span>
+      <span className="block text-[15px] font-semibold">{title}</span>
+      <span className="mt-1 block text-[15px] leading-relaxed text-secondary">{detail}</span>
     </>
   );
   if (!onClick) return <div className={className}>{body}</div>;

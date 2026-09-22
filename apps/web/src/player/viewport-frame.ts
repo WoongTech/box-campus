@@ -58,8 +58,26 @@ export function installViewportFrame() {
   const root = document.documentElement;
   root.style.setProperty("--app-top", `${box.top}px`);
   root.style.setProperty("--app-height", `${box.height}px`);
+  // Keep a floor for the home-indicator gap when env(safe-area) is flaky in standalone.
+  const sab = readSafeAreaBottom();
+  const floor = iosDevice() && standaloneDisplay() ? 22 : 0;
+  root.style.setProperty("--sab", `${Math.max(sab, floor)}px`);
+}
+
+function readSafeAreaBottom() {
+  try {
+    const probe = document.createElement("div");
+    probe.style.cssText =
+      "position:fixed;bottom:0;left:0;visibility:hidden;padding-bottom:env(safe-area-inset-bottom,0px)";
+    document.documentElement.appendChild(probe);
+    const value = parseFloat(getComputedStyle(probe).paddingBottom || "0");
+    probe.remove();
+    return Number.isFinite(value) ? value : 0;
+  } catch {
+    return 0;
+  }
 }
 
 export function viewportFrameScript() {
-  return `(()=>{try{${cssScreenHeight.toString()};${viewportBox.toString()};${iosDevice.toString()};${standaloneDisplay.toString()};${installViewportFrame.toString()};installViewportFrame();}catch(e){}})();`;
+  return `(()=>{try{${cssScreenHeight.toString()};${viewportBox.toString()};${iosDevice.toString()};${standaloneDisplay.toString()};${readSafeAreaBottom.toString()};${installViewportFrame.toString()};installViewportFrame();}catch(e){}})();`;
 }

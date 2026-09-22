@@ -2,7 +2,7 @@
 
 import { AppIcon } from "@/lib/icons";
 
-const TAB_ICON = 22;
+const TAB_ICON = 26;
 
 export function TabBar({
   tab,
@@ -16,8 +16,11 @@ export function TabBar({
   onCompose: () => void;
 }) {
   return (
-    <nav className="absolute inset-x-0 bottom-0 z-30 border-t border-white/10 bg-black pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
-      <div className="grid h-[52px] grid-cols-3">
+    <nav
+      className="absolute inset-x-0 bottom-0 z-30 border-t border-white/10 bg-black"
+      style={{ paddingBottom: "calc(10px + var(--sab, env(safe-area-inset-bottom, 0px)))" }}
+    >
+      <div className="grid h-12 grid-cols-3">
         <TabButton label="홈" current={tab === "home"} onClick={onHome} name="home" />
         <TabButton label="추가" onClick={onCompose} name="plus" />
         <TabButton label="저장" current={tab === "saved"} onClick={onSaved} name="bookmark" />
@@ -42,10 +45,10 @@ function TabButton({
       type="button"
       aria-label={label}
       aria-current={current ? "page" : undefined}
-      className={`flex items-center justify-center ${current ? "text-white" : "text-white/40"}`}
+      className={`flex items-center justify-center ${current ? "text-white" : "text-white/35"}`}
       onClick={onClick}
     >
-      <AppIcon name={name} size={TAB_ICON} strokeWidth={current ? 2 : 1.6} />
+      <AppIcon name={name} size={TAB_ICON} strokeWidth={current ? 2.1 : 1.7} />
     </button>
   );
 }
