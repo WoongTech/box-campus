@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AppIcon, phoneIconSize } from "@/lib/icons";
 import { StoryRail } from "./story-rail";
+import { StoryMark } from "./story-mark";
 import { Wordmark } from "./brand";
 import { useCampus, type Library } from "./campus-provider";
 
@@ -31,7 +32,6 @@ type FeedRow = {
   key: string;
   campusId: string;
   handle: string;
-  initial: string;
   ideaId: string;
   cardId: string;
   title: string;
@@ -55,6 +55,7 @@ export function HomeView({
   const [resetArmed, setResetArmed] = useState(false);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const scroller = useRef<HTMLDivElement>(null);
   const activeIdeaId = state.session.kind === "feed" ? state.session.feed.ideaId : "";
   const active = activePost(state);
   const rows = useMemo(
@@ -76,7 +77,14 @@ export function HomeView({
   const continueRow = rows.find((row) => row.current) ?? null;
   const ideaCount = active.ideas.length;
   const weekCount = active.weeks.filter((week) => week.ideaIds.length > 0).length;
-  const initial = active.title.trim().slice(0, 1) || "스";
+
+  useEffect(() => {
+    function onTop() {
+      scroller.current?.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    window.addEventListener("alter:home-top", onTop);
+    return () => window.removeEventListener("alter:home-top", onTop);
+  }, []);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -127,15 +135,11 @@ export function HomeView({
             className="flex shrink-0 items-center gap-3 border-y border-white/[0.08] px-4 py-3 text-left active:bg-white/[0.03]"
             onClick={onCompose}
           >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
-              {initial}
-            </span>
+            <StoryMark seed={active.id} size={36} />
             <span className="min-w-0 flex-1 text-[15px] text-secondary">새 스토리를 적어 보세요…</span>
           </button>
           <div className="flex shrink-0 items-center gap-3 px-4 py-3">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white/10 text-[15px] font-semibold">
-              {initial}
-            </span>
+            <StoryMark seed={active.id} size={44} title={active.title} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-[15px] font-semibold leading-5">{shortName(active.title)}</p>
               <p className="truncate text-[13px] text-secondary">
@@ -156,6 +160,7 @@ export function HomeView({
               className="mx-4 mb-2 flex shrink-0 items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-left active:bg-white/[0.07]"
               onClick={onOpenStory}
             >
+              <StoryMark seed={continueRow.campusId} size={32} />
               <span className="min-w-0 flex-1">
                 <span className="block text-[12px] font-medium text-secondary">이어서 보기</span>
                 <span className="mt-0.5 block truncate text-[14px] font-semibold">{continueRow.title}</span>
@@ -195,8 +200,8 @@ export function HomeView({
                     }`}
                   >
                     <div className="relative flex flex-col items-center">
-                      <span className="z-10 flex size-9 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
-                        {row.initial}
+                      <span className="z-10">
+                        <StoryMark seed={row.campusId} size={36} title={row.handle} />
                       </span>
                       {row.thread === "start" || row.thread === "mid" ? (
                         <span className="absolute top-9 bottom-0 w-px bg-white/15" aria-hidden />
@@ -326,7 +331,6 @@ export function SavedView({ onOpenCard }: { onOpenCard: (cardId: string) => void
           )
         ) : (
           items.map((item) => {
-            const initial = item.story.trim().slice(0, 1) || "스";
             return (
               <div
                 key={item.cardId}
@@ -337,8 +341,8 @@ export function SavedView({ onOpenCard }: { onOpenCard: (cardId: string) => void
                   className="grid min-w-0 flex-1 grid-cols-[36px_minmax(0,1fr)] gap-x-3 px-4 py-3.5 text-left active:bg-white/[0.03]"
                   onClick={() => onOpenCard(item.cardId)}
                 >
-                  <span className="row-span-2 mt-0.5 flex size-9 items-center justify-center rounded-full bg-white/10 text-[13px] font-semibold">
-                    {initial}
+                  <span className="row-span-2 mt-0.5">
+                    <StoryMark seed={item.story} size={36} title={item.story} />
                   </span>
                   <span className="truncate text-[15px] font-semibold leading-5 text-primary">
                     {shortName(item.story)}
@@ -429,7 +433,6 @@ function rowsForPost(post: StoryPost, activeIdeaId: string, activeCampusId: stri
         key: `${post.id}:${ideaId}`,
         campusId: post.id,
         handle: shortName(post.title),
-        initial: post.title.trim().slice(0, 1) || "스",
         ideaId,
         cardId: thesisCard?.id ?? "",
         title: idea?.title ?? "카드뉴스",

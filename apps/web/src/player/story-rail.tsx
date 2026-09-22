@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AppIcon } from "@/lib/icons";
 import { useCampus } from "./campus-provider";
 import { markStorySeen, readSeenStories } from "./learner-prefs";
+import { StoryMark } from "./story-mark";
 
 export function StoryRail({
   onCompose,
@@ -53,8 +54,8 @@ export function StoryRail({
                   : "bg-[conic-gradient(from_210deg,#f9ce34,#ee2a7b,#6228d7,#f9ce34)]"
               }`}
             >
-              <span className="flex size-[3.75rem] items-center justify-center rounded-full bg-body text-[15px] font-semibold">
-                {name.trim().slice(0, 1) || "스"}
+              <span className="rounded-full bg-black p-[2px]">
+                <StoryMark seed={id} size={56} title={name} />
               </span>
             </span>
             <span

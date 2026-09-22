@@ -8,6 +8,7 @@ import { useCampus } from "./campus-provider";
 import { useFieldFocusLock } from "./interaction-lock";
 import { tapHintDismissed } from "./learner-prefs";
 import { splitBlocks } from "./split-blocks";
+import { StoryMark } from "./story-mark";
 
 export function FeedView({ onClose }: { onClose: () => void }) {
   const { state, frame, actions, meta, nav } = useCampus();
@@ -41,7 +42,6 @@ export function FeedView({ onClose }: { onClose: () => void }) {
   const hidden = failed.slide === slide ? failed.srcs : [];
   const images = split.images.filter((block) => !hidden.includes(block.src));
   const hasSlideImage = images.length > 0 && !showDock;
-  const storyReading = !hasText && !hasChoices && !hasSlideImage;
   const choiceCount = view.control.kind === "choices" ? view.control.options.length : 0;
   const progressLabel =
     typeof view.pentadIndex === "number"
@@ -120,9 +120,7 @@ export function FeedView({ onClose }: { onClose: () => void }) {
         className="relative z-20 flex shrink-0 items-center gap-2 px-3 pt-2"
         onClick={(event) => event.stopPropagation()}
       >
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-xs font-semibold">
-          {state.campus.title.trim().slice(0, 1) || "스"}
-        </span>
+        <StoryMark seed={state.campus.id} size={32} title={state.campus.title} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-[14px] font-semibold leading-tight">{ideaTitle || state.campus.title}</p>
           {subtitle ? <p className="truncate text-[11px] text-white/60">{subtitle}</p> : null}

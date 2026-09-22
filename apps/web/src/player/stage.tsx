@@ -201,7 +201,13 @@ export function Stage() {
       {showTabs ? (
         <TabBar
           tab={surface === "saved" ? "saved" : "home"}
-          onHome={() => setSurface("home")}
+          onHome={() => {
+            if (surface === "home") {
+              window.dispatchEvent(new Event("alter:home-top"));
+              return;
+            }
+            setSurface("home");
+          }}
           onSaved={() => setSurface("saved")}
           onCompose={() => setComposeOpen(true)}
         />
