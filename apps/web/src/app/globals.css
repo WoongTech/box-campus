@@ -8,7 +8,7 @@
 
 @layer utilities {
   :root {
-    /* Floors: CSS (iPhone) + JS boot. Never rely on Function#toString(). */
+    /* Mirrored from env() by the viewport boot script — never fake floors. */
     --sat: 0px;
     --sab: 0px;
   }
@@ -33,43 +33,18 @@
   }
 }
 
-@supports (-webkit-touch-callout: none) {
-  @media (pointer: coarse) and (max-width: 550px) {
-    :root {
-      --sab: 34px;
-    }
-  }
-}
-
-@media (display-mode: standalone), (display-mode: fullscreen) {
-  @supports (-webkit-touch-callout: none) {
-    @media (pointer: coarse) and (max-width: 550px) {
-      :root {
-        --sat: 47px;
-        --sab: 34px;
-      }
-    }
-  }
-}
-
 /*
- * Unlayered so safe-area padding always wins over utility classes.
- * Progressive fallbacks: comfort → env() → max(env, JS/CSS floor).
+ * Unlayered so safe-area padding wins over utilities.
+ * Comfort + real env() only — invented floors created empty bands in Chrome.
  */
 .app-sat {
-  padding-top: 0.35rem;
   padding-top: calc(0.35rem + env(safe-area-inset-top, 0px));
-  padding-top: calc(0.35rem + max(env(safe-area-inset-top, 0px), var(--sat)));
 }
 
 .app-sab {
-  padding-bottom: 0.5rem;
   padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
-  padding-bottom: calc(0.5rem + max(env(safe-area-inset-bottom, 0px), var(--sab)));
 }
 
 .app-tabbar {
-  padding-bottom: 0.5rem;
   padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
-  padding-bottom: calc(0.5rem + max(env(safe-area-inset-bottom, 0px), var(--sab)));
 }

@@ -31,12 +31,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           dangerouslySetInnerHTML={{
             __html: `
 :root{--sat:0px;--sab:0px}
-@supports (-webkit-touch-callout:none){@media (pointer:coarse) and (max-width:550px){:root{--sab:34px}}}
-@media (display-mode:standalone),(display-mode:fullscreen){@supports (-webkit-touch-callout:none){@media (pointer:coarse) and (max-width:550px){:root{--sat:47px;--sab:34px}}}}
 html,body{background:#000;margin:0;position:fixed;inset:0;width:100%;height:100%;overflow:hidden}
-.app-sat{padding-top:0.35rem;padding-top:calc(0.35rem + env(safe-area-inset-top,0px));padding-top:calc(0.35rem + max(env(safe-area-inset-top,0px),var(--sat,0px)))!important}
-.app-sab{padding-bottom:0.5rem;padding-bottom:calc(0.5rem + env(safe-area-inset-bottom,0px));padding-bottom:calc(0.5rem + max(env(safe-area-inset-bottom,0px),var(--sab,0px)))!important}
-.app-tabbar{padding-bottom:0.5rem;padding-bottom:calc(0.5rem + env(safe-area-inset-bottom,0px));padding-bottom:calc(0.5rem + max(env(safe-area-inset-bottom,0px),var(--sab,0px)))!important}
+.app-sat{padding-top:calc(0.35rem + env(safe-area-inset-top,0px))!important}
+.app-sab{padding-bottom:calc(0.5rem + env(safe-area-inset-bottom,0px))!important}
+.app-tabbar{padding-bottom:calc(0.5rem + env(safe-area-inset-bottom,0px))!important}
 `,
           }}
         />
