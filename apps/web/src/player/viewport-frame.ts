@@ -4,10 +4,6 @@ export function viewportBox(input: {
   innerHeight: number;
   visualHeight: number;
   visualTop: number;
-  screenHeight: number;
-  devicePixelRatio: number;
-  ios: boolean;
-  standalone: boolean;
 }): ViewportBox {
   const keyboard = input.innerHeight - input.visualHeight > 140;
   if (keyboard) return { top: input.visualTop, height: input.visualHeight };
@@ -53,10 +49,6 @@ export function installViewportFrame() {
     innerHeight,
     visualHeight,
     visualTop: vv?.offsetTop ?? 0,
-    screenHeight: window.screen.height,
-    devicePixelRatio: window.devicePixelRatio || 1,
-    ios: iosDevice(),
-    standalone: standaloneDisplay(),
   });
   if (box.height < 1) return;
 
