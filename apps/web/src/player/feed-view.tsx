@@ -43,13 +43,10 @@ export function FeedView({ onClose }: { onClose: () => void }) {
   const images = split.images.filter((block) => !hidden.includes(block.src));
   const hasSlideImage = images.length > 0 && !showDock;
   const choiceCount = view.control.kind === "choices" ? view.control.options.length : 0;
-  const progressLabel =
-    typeof view.pentadIndex === "number"
-      ? `${view.pentadIndex + 1}/4`
-      : view.weekLabel
-        ? view.weekLabel
-        : null;
-  const subtitle = [ideaTitle ? shortCampus(state.campus.title) : null, progressLabel].filter(Boolean).join(" · ");
+  const progressLabel = typeof view.pentadIndex === "number" ? `${view.pentadIndex + 1}/4` : null;
+  const subtitle = [ideaTitle ? shortCampus(state.campus.title) : null, progressLabel]
+    .filter(Boolean)
+    .join(" · ");
 
   function hideImage(src: string) {
     setFailed((current) => {
@@ -240,8 +237,12 @@ export function FeedView({ onClose }: { onClose: () => void }) {
             />
           ) : null}
           {view.role === "hub" ? (
-            <button type="button" className="min-h-11 w-full rounded-full bg-white text-sm font-semibold text-black active:bg-white/90" onClick={onClose}>
-              홈
+            <button
+              type="button"
+              className="min-h-11 w-full rounded-full bg-white text-[15px] font-semibold text-black active:bg-white/90"
+              onClick={onClose}
+            >
+              홈으로
             </button>
           ) : null}
         </div>

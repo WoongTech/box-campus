@@ -180,10 +180,10 @@ export function HomeView({
                           ) : null}
                         </span>
                       </button>
-                      <div className="mt-1.5 flex items-center">
+                      <div className="mt-1 flex items-center">
                         <button
                           type="button"
-                          className={`flex h-8 items-center gap-1.5 rounded-full px-1.5 text-[13px] active:bg-white/10 ${
+                          className={`flex size-8 items-center justify-center rounded-full active:bg-white/10 ${
                             saved ? "text-primary" : "text-secondary"
                           }`}
                           aria-label={saved ? "저장됨" : "저장"}
@@ -195,7 +195,6 @@ export function HomeView({
                           }}
                         >
                           <AppIcon name="bookmark" size={17} strokeWidth={saved ? 2.2 : 1.7} />
-                          {saved ? "저장됨" : "저장"}
                         </button>
                       </div>
                     </div>
@@ -206,8 +205,8 @@ export function HomeView({
             {!query.trim() ? (
               <button
                 type="button"
-                className={`w-full py-5 text-center text-[13px] active:text-primary ${
-                  resetArmed ? "font-medium text-primary" : "text-secondary"
+                className={`w-full py-6 text-center text-[12px] active:text-primary ${
+                  resetArmed ? "font-medium text-primary" : "text-secondary/70"
                 }`}
                 onClick={() => {
                   if (!resetArmed) {
@@ -219,7 +218,7 @@ export function HomeView({
                   actions.dispatch({ kind: "reset-sample", raw: state.campus });
                 }}
               >
-                {resetArmed ? "다시 누르면 처음부터" : "이 스토리 처음부터"}
+                {resetArmed ? "다시 누르면 처음부터" : "처음부터"}
               </button>
             ) : null}
           </section>
@@ -249,7 +248,7 @@ export function SavedView({ onOpenCard }: { onOpenCard: (cardId: string) => void
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex shrink-0 flex-col gap-2 border-b border-white/[0.08] px-4 pt-[max(0.85rem,env(safe-area-inset-top))] pb-3">
+      <header className="flex shrink-0 flex-col gap-2 px-4 pt-[max(0.85rem,env(safe-area-inset-top))] pb-2">
         <h1 className="flex h-6 items-center text-[17px] font-bold tracking-tight">저장</h1>
         <input
           value={query}
@@ -259,7 +258,7 @@ export function SavedView({ onOpenCard }: { onOpenCard: (cardId: string) => void
           className="h-10 w-full rounded-full border border-white/15 bg-white/5 px-4 text-[15px] text-primary outline-none placeholder:text-secondary"
         />
       </header>
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain border-t border-white/[0.08]">
         {items.length === 0 ? (
           query.trim() ? (
             <EmptyCopy title="검색 결과가 없습니다" detail="다른 단어로 다시 찾아 보세요." />

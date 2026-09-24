@@ -622,10 +622,10 @@ function projectCardView(state, encounter) {
       weekLabel: null,
       pentadIndex: null,
       blocks: [
-        { kind: "title", text: "이 카드뉴스를 다 봤습니다" },
+        { kind: "title", text: "여기까지입니다" },
         {
           kind: "body",
-          text: "홈에서 다른 편을 고르거나, 저장해 둔 카드를 다시 열 수 있습니다.",
+          text: "홈으로 돌아가 다른 글을 이어서 볼 수 있습니다.",
         },
       ],
       control: { kind: "advance", label: "홈으로" },

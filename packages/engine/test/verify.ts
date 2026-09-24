@@ -412,7 +412,7 @@ test("one idea finishes before the next, then the feed can reopen it", () => {
   assert.equal(seen.at(-1), "room-f");
   const frame = cardFrame(schedule(state, FIXED_NOW, { kind: "resume" }));
   assert.equal(frame.view.role, "hub");
-  assert.ok(frame.view.blocks.some((block) => block.text === "이 카드뉴스를 다 봤습니다"));
+  assert.ok(frame.view.blocks.some((block) => block.text === "여기까지입니다"));
   state = record(
     state,
     { kind: "open-idea", ideaId: "idea-c", transitionId: state.transitionId },
